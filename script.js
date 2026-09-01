@@ -1,8 +1,5 @@
 function decodeVIN() {
-    const vin = document
-        .getElementById("vin")
-        .value
-        .toUpperCase();
+    const vin = document.getElementById("vin").value.toUpperCase();
 
     let make = "Unknown";
 
