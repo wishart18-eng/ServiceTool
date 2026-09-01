@@ -10,4 +10,12 @@ input {
 
 button {
     padding: 10px;
+    margin-left: 5px;
 }
+
+#result {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+``
