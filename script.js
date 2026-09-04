@@ -87,14 +87,28 @@ async function decodeVehicle() {
         const age = calculateAge(inServiceDate);
 
         // Match Schedule: Make -> Model -> Engine displacement fallback -> DEFAULT
-        let activeSchedule = [];
-        if (schedulesDB[make] && schedulesDB[make][model]) {
-            activeSchedule = schedulesDB[make][model][engineDisplacement] || schedulesDB[make][model]["2.0"] || [];
-        }
-        if (!activeSchedule.length) {
-            activeSchedule = schedulesDB["DEFAULT"] || [];
-        }
+       // Smarter schedule matching for Alfa, Maserati, Fiat, or fallback:
+let activeSchedule = [];
 
+if (schedulesDB[make] && schedulesDB[make][model]) {
+    const modelSchedules = schedulesDB[make][model];
+    
+    // 1. Exact engine match (e.g., "3.0", "1.4", "2.0")
+    if (modelSchedules[engineDisplacement]) {
+        activeSchedule = modelSchedules[engineDisplacement];
+    } else {
+        // 2. Pick the first engine listed for that model if exact displacement isn't found
+        const availableEngines = Object.keys(modelSchedules);
+        if (availableEngines.length > 0) {
+            activeSchedule = modelSchedules[availableEngines[0]];
+        }
+    }
+}
+
+// 3. If model/make not in database, fallback to DEFAULT
+if (!activeSchedule || !activeSchedule.length) {
+    activeSchedule = schedulesDB["DEFAULT"] || [];
+}
         // Evaluate Maintenance Intervals
         let dueNow = [];
         let upcoming = [];
