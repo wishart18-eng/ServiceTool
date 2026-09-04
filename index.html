@@ -25,8 +25,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="inServiceDate">In-Service Date</label>
-                    <input type="date" id="inServiceDate">
+                    <label for="inServiceDate">In-Service Date / Year</label>
+                    <input type="text" id="inServiceDate" placeholder="e.g. Aug 20, 2021, 08/20">
+                </div>
+
+                <div class="form-group">
+                    <label for="customerName">Customer Name (Optional)</label>
+                    <input type="text" id="customerName" placeholder="e.g. John Smith">
                 </div>
             </div>
 
@@ -45,7 +50,7 @@
             <div class="modal-header">
                 <div>
                     <h3 id="modalVehicleTitle">Vehicle Service Pitch</h3>
-                    <p class="modal-subtitle">Tailored value propositions and SMS draft</p>
+                    <p class="modal-subtitle">Tailored value propositions and upcoming appointment SMS</p>
                 </div>
                 <button id="closeModalBtn" class="btn-close">&times;</button>
             </div>
@@ -63,10 +68,10 @@
                 <!-- Section B: Customer SMS -->
                 <div class="story-section">
                     <div class="section-label">
-                        <span>📱 Customer Text / SMS (Copy & Paste)</span>
+                        <span>📱 Customer Text / SMS (Upcoming Appointment)</span>
                         <button id="copySmsBtn" class="btn-mini btn-mini-primary">📋 Copy SMS</button>
                     </div>
-                    <textarea id="smsText" class="story-box sms-box" rows="7" readonly></textarea>
+                    <textarea id="smsText" class="story-box sms-box" rows="8"></textarea>
                 </div>
             </div>
         </div>
