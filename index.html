@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ServiceTool">
     
+    <!-- Real-time Barcode Decoder (Automotive Standard) -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <!-- On-Device OCR Engine -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="./style.css">
@@ -18,7 +20,6 @@
     <h1>ServiceTool VIN Decoder</h1>
 
     <div class="input-row">
-        <!-- VIN Input with Camera Button inside -->
         <div class="vin-input-wrapper">
             <input type="text" id="vin" placeholder="Enter or Scan VIN" maxlength="17" autofocus autocomplete="off">
             <button type="button" id="cameraBtn" class="btn-cam" title="Scan VIN with Camera">📷</button>
@@ -37,7 +38,7 @@
     <div id="scannerModal" class="scanner-backdrop">
         <div class="scanner-container">
             <div class="scanner-header">
-                <span>Aim VIN inside target box</span>
+                <span>Aim at Barcode or Text</span>
                 <button type="button" id="closeScannerBtn" class="btn-scanner-close">&times;</button>
             </div>
             
@@ -48,8 +49,13 @@
                 </div>
             </div>
 
+            <!-- Live Text Feedback -->
+            <div class="scanner-feedback-bar">
+                <span id="scannerLiveRead">Position VIN or barcode in the box</span>
+            </div>
+
             <div class="scanner-footer">
-                <span id="scannerStatus">Starting camera...</span>
+                <button type="button" id="forceSnapBtn" class="btn-force-snap">📸 Snap Frame Now</button>
             </div>
         </div>
     </div>
