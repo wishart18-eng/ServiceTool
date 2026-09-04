@@ -1,20 +1,245 @@
+:root {
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0284c7;
+    --info-bg: #f0f9ff;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-font-family: Arial, sans-serif;
-padding: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
 }
 
-input {
-padding: 10px;
-width: 300px;
+.app-container {
+    width: 100%;
+    max-width: 900px;
 }
 
-button {
-padding: 10px;
-margin-left: 5px;
+.app-header {
+    margin-bottom: 20px;
 }
 
-#result {
-margin-top: 20px;
-font-size: 24px;
-font-weight: bold;
+.app-header h1 {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.app-header h1 span {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.2fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 680px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-family: inherit;
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.button-row {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: var(--text-primary);
+}
+.btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+.btn-copy {
+    background: #0f172a;
+    color: #fff;
+    margin-top: 14px;
+    width: 100%;
+    padding: 12px;
+}
+.btn-copy:hover {
+    background: #334155;
+}
+
+/* Vehicle Header Banner */
+.vehicle-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+}
+
+.vehicle-banner h2 {
+    font-size: 22px;
+    color: var(--text-primary);
+}
+
+.vehicle-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.specs-grid strong {
+    color: var(--text-primary);
+}
+
+/* Service Item Cards */
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 20px 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.service-card {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid;
+}
+
+.service-card.due {
+    background: var(--danger-bg);
+    border-left-color: var(--danger);
+}
+
+.service-card.upcoming {
+    background: var(--warning-bg);
+    border-left-color: var(--warning);
+}
+
+.service-card.time-due {
+    background: var(--info-bg);
+    border-left-color: var(--info);
+}
+
+.service-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.service-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.badge-due { background: var(--danger); color: #fff; }
+.badge-upcoming { background: var(--warning); color: #fff; }
+.badge-time { background: var(--info); color: #fff; }
+
+.empty-state {
+    padding: 16px;
+    text-align: center;
+    background: var(--success-bg);
+    color: var(--success);
+    border-radius: 6px;
+    font-weight: 600;
 }
