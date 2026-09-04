@@ -642,3 +642,32 @@ hr {
         justify-content: space-between;
     }
 }
+/* Live Scanner Feedback Bar & Snap Button */
+.scanner-feedback-bar {
+    background: #0f172a;
+    padding: 8px 14px;
+    border-top: 1px solid #334155;
+    text-align: center;
+    font-family: monospace;
+    font-size: 13px;
+    color: #38bdf8;
+    min-height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-force-snap {
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-force-snap:hover {
+    background: #1d4ed8;
+}
