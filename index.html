@@ -18,26 +18,27 @@
     <h1>ServiceTool VIN Decoder</h1>
 
     <div class="input-row">
+        <!-- VIN Input with Camera Button inside -->
         <div class="vin-input-wrapper">
             <input type="text" id="vin" placeholder="Enter or Scan VIN" maxlength="17" autofocus autocomplete="off">
-            <button type="button" id="cameraBtn" class="btn-cam" title="Scan VIN with Live Camera">📷</button>
+            <button type="button" id="cameraBtn" class="btn-cam" title="Scan VIN with Camera">📷</button>
         </div>
 
         <input type="number" id="mileage" placeholder="Current Mileage" min="0">
         <input type="text" id="inServiceDate" placeholder="In-Service (e.g. Aug 20, 2021)">
         <input type="text" id="customerName" placeholder="Customer Name (Optional)">
-        <button id="decodeButton">Decode</button>
-        <button id="clearButton">Clear</button>
+        <button type="button" id="decodeButton">Decode</button>
+        <button type="button" id="clearButton">Clear</button>
     </div>
 
     <div id="result"></div>
 
     <!-- Live Camera Scanner Viewfinder -->
-    <div id="scannerModal" class="scanner-backdrop" style="display: none;">
+    <div id="scannerModal" class="scanner-backdrop">
         <div class="scanner-container">
             <div class="scanner-header">
                 <span>Aim VIN inside target box</span>
-                <button id="closeScannerBtn" class="btn-scanner-close">&times;</button>
+                <button type="button" id="closeScannerBtn" class="btn-scanner-close">&times;</button>
             </div>
             
             <div class="video-wrapper">
@@ -48,26 +49,25 @@
             </div>
 
             <div class="scanner-footer">
-                <span id="scannerStatus">Scanning for 17-character VIN...</span>
+                <span id="scannerStatus">Starting camera...</span>
             </div>
         </div>
     </div>
 
-    <!-- Hidden Canvas for Video Frame Cropping -->
     <canvas id="scannerCanvas" style="display: none;"></canvas>
 
     <!-- Modal Popup for Word Track & SMS -->
-    <div id="storyModal" class="modal-backdrop" style="display: none;">
+    <div id="storyModal" class="modal-backdrop">
         <div class="modal-card">
             <div class="modal-header">
                 <h3 id="modalVehicleTitle">Vehicle Service Pitch</h3>
-                <button id="closeModalBtn" class="btn-close">&times;</button>
+                <button type="button" id="closeModalBtn" class="btn-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="story-section">
                     <div class="story-label-row">
                         <strong>📞 Phone Word-Track (Spoken Script)</strong>
-                        <button id="copyWordTrackBtn">Copy Script</button>
+                        <button type="button" id="copyWordTrackBtn">Copy Script</button>
                     </div>
                     <div id="wordTrackText" class="story-box wordtrack-box"></div>
                 </div>
@@ -75,7 +75,7 @@
                 <div class="story-section">
                     <div class="story-label-row">
                         <strong>📱 Customer Text / SMS (Upcoming Appointment)</strong>
-                        <button id="copySmsBtn">Copy SMS</button>
+                        <button type="button" id="copySmsBtn">Copy SMS</button>
                     </div>
                     <textarea id="smsText" class="story-box sms-box" rows="7"></textarea>
                 </div>
