@@ -515,3 +515,68 @@ document.getElementById("clearButton").addEventListener("click", () => {
     lastDecodedVehicle = null;
     document.getElementById("vin").focus();
 });
+// ==========================================
+// CAMERA VIN OCR SCANNER
+// ==========================================
+const cameraBtn = document.getElementById("cameraBtn");
+const vinCameraInput = document.getElementById("vinCameraInput");
+const vinInput = document.getElementById("vin");
+const resultContainer = document.getElementById("result");
+
+cameraBtn.addEventListener("click", () => {
+    vinCameraInput.click();
+});
+
+vinCameraInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Reset input so you can snap another if needed
+    e.target.value = "";
+
+    resultContainer.innerHTML = `
+        <div class="service-entry" style="border-left-color: var(--primary); background: #eff6ff;">
+            <p><strong>📷 Scanning image for VIN...</strong></p>
+            <p>Analyzing text from dashboard/screen. Please hold on a few seconds.</p>
+        </div>
+    `;
+
+    try {
+        // Run on-device OCR using Tesseract
+        const { data: { text } } = await Tesseract.recognize(file, 'eng');
+        
+        // Clean text: strip special chars and spaces
+        const rawUpper = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+        // Search for any 17-character sequence
+        const matches = rawUpper.match(/[A-Z0-9]{17}/g);
+
+        if (matches && matches.length > 0) {
+            let candidateVin = matches[0];
+
+            // VIN standardization: Factory VINs never use I, O, or Q (to prevent mixup with 1 & 0)
+            candidateVin = candidateVin
+                .replace(/I/g, '1')
+                .replace(/O/g, '0')
+                .replace(/Q/g, '0');
+
+            vinInput.value = candidateVin;
+
+            resultContainer.innerHTML = `
+                <div class="service-entry" style="border-left-color: var(--success-green); background: var(--success-soft);">
+                    <p><strong>✅ VIN Captured: ${candidateVin}</strong></p>
+                    <p>Enter mileage and date, then tap <strong>Decode</strong>.</p>
+                </div>
+            `;
+        } else {
+            resultContainer.innerHTML = `
+                <p style="color:var(--danger-red);"><strong>⚠️ Could not clearly isolate a 17-character VIN.</strong></p>
+                <p style="font-size:13px; color:var(--slate-muted);">Text detected: "${text.trim().substring(0, 50)}..."</p>
+                <p>Please ensure the photo is in focus, well-lit, and holds the VIN straight.</p>
+            `;
+        }
+    } catch (err) {
+        console.error("OCR Scan Error:", err);
+        resultContainer.innerHTML = `<p style="color:var(--danger-red);"><strong>Error scanning image. Please type VIN manually.</strong></p>`;
+    }
+});
