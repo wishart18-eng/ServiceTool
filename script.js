@@ -2,16 +2,28 @@
 // SERVICETOOL - ADVISOR QUICK LOOKUP ENGINE
 // ==========================================
 
-let schedulesDB = {};
+// Built-in fallback database so it NEVER fails if fetch() is blocked locally
+const fallbackDB = {
+  "MASERATI": {
+    "GHIBLI": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] },
+    "LEVANTE": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] },
+    "GRECALE": { "2.0": [{ "id": "oil_service", "name": "Engine Oil & Filter Service (MHEV)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "10,000 miles or 1 year." }] },
+    "QUATTROPORTE": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] }
+  }
+};
 
-// Load schedule database on startup
+let schedulesDB = fallbackDB;
+
+// Load external schedule database
 async function loadSchedules() {
     try {
         const response = await fetch("./schedules.json");
-        if (!response.ok) throw new Error("Could not load schedules.json");
-        schedulesDB = await response.json();
+        if (response.ok) {
+            schedulesDB = await response.json();
+            console.log("Loaded schedules.json successfully.");
+        }
     } catch (err) {
-        console.error("Database load error:", err);
+        console.warn("Using built-in fallback schedules (local file mode).");
     }
 }
 loadSchedules();
@@ -36,6 +48,40 @@ function calculateAge(inServiceDate) {
 }
 
 // ==========================================
+// SMART MODEL MATCHER
+// ==========================================
+function findScheduleForVehicle(make, rawModel, engineDisplacement) {
+    if (!schedulesDB[make]) return schedulesDB["DEFAULT"] || [];
+
+    const brandModels = schedulesDB[make];
+    let matchedKey = null;
+
+    // Check if the NHTSA model name contains our key (e.g. "GHIBLI S Q4" contains "GHIBLI")
+    for (const key of Object.keys(brandModels)) {
+        if (rawModel.includes(key) || key.includes(rawModel)) {
+            matchedKey = key;
+            break;
+        }
+    }
+
+    if (!matchedKey) return schedulesDB["DEFAULT"] || [];
+
+    const engineVariants = brandModels[matchedKey];
+    
+    // Match exact engine, or default to the first engine listed
+    if (engineVariants[engineDisplacement]) {
+        return engineVariants[engineDisplacement];
+    }
+    
+    const available = Object.keys(engineVariants);
+    if (available.length > 0) {
+        return engineVariants[available[0]];
+    }
+
+    return schedulesDB["DEFAULT"] || [];
+}
+
+// ==========================================
 // MAIN DECODE & CALCULATION FUNCTION
 // ==========================================
 async function decodeVehicle() {
@@ -48,7 +94,6 @@ async function decodeVehicle() {
     const mileage = Number(mileageInput.value);
     const inServiceDate = dateInput.value;
 
-    // Validation
     if (vin.length !== 17) {
         resultContainer.innerHTML = `<div class="card"><p style="color:var(--danger); font-weight:bold;">⚠️ Please enter a complete 17-character VIN.</p></div>`;
         return;
@@ -62,10 +107,9 @@ async function decodeVehicle() {
         return;
     }
 
-    resultContainer.innerHTML = `<div class="card"><p>Querying NHTSA database and generating schedule...</p></div>`;
+    resultContainer.innerHTML = `<div class="card"><p>Querying NHTSA database and calculating schedule...</p></div>`;
 
     try {
-        // Fetch from NHTSA API
         const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`);
         if (!response.ok) throw new Error("API request failed.");
         const data = await response.json();
@@ -77,39 +121,18 @@ async function decodeVehicle() {
 
         const v = data.Results[0];
         const make = (v.Make || "UNKNOWN").toUpperCase();
-        const model = (v.Model || "UNKNOWN").toUpperCase();
+        const rawModel = (v.Model || "UNKNOWN").toUpperCase();
         const year = v.ModelYear || "N/A";
-        const engineDisplacement = v.DisplacementL ? parseFloat(v.DisplacementL).toFixed(1) : "2.0";
+        const engineDisplacement = v.DisplacementL ? parseFloat(v.DisplacementL).toFixed(1) : "3.0";
         const driveType = v.DriveType || "N/A";
         const fuel = v.FuelTypePrimary || "Gasoline";
         const transmission = v.TransmissionStyle || "Automatic";
 
         const age = calculateAge(inServiceDate);
 
-        // Match Schedule: Make -> Model -> Engine displacement fallback -> DEFAULT
-       // Smarter schedule matching for Alfa, Maserati, Fiat, or fallback:
-let activeSchedule = [];
+        // Smarter fuzzy schedule matching
+        const activeSchedule = findScheduleForVehicle(make, rawModel, engineDisplacement);
 
-if (schedulesDB[make] && schedulesDB[make][model]) {
-    const modelSchedules = schedulesDB[make][model];
-    
-    // 1. Exact engine match (e.g., "3.0", "1.4", "2.0")
-    if (modelSchedules[engineDisplacement]) {
-        activeSchedule = modelSchedules[engineDisplacement];
-    } else {
-        // 2. Pick the first engine listed for that model if exact displacement isn't found
-        const availableEngines = Object.keys(modelSchedules);
-        if (availableEngines.length > 0) {
-            activeSchedule = modelSchedules[availableEngines[0]];
-        }
-    }
-}
-
-// 3. If model/make not in database, fallback to DEFAULT
-if (!activeSchedule || !activeSchedule.length) {
-    activeSchedule = schedulesDB["DEFAULT"] || [];
-}
-        // Evaluate Maintenance Intervals
         let dueNow = [];
         let upcoming = [];
 
@@ -119,7 +142,7 @@ if (!activeSchedule || !activeSchedule.length) {
             let reason = "";
             let badgeType = "badge-due";
 
-            // 1. Evaluate Mileage
+            // Mileage calculation
             if (item.intervalMiles) {
                 const interval = item.intervalMiles;
                 const milesSinceCycle = mileage % interval;
@@ -127,7 +150,6 @@ if (!activeSchedule || !activeSchedule.length) {
                 const targetMilestone = Math.floor(mileage / interval) * interval;
                 const nextMilestone = targetMilestone + interval;
 
-                // Window: within 1,500 miles approaching target OR passed within 1,500 miles
                 if (mileage >= interval && milesSinceCycle <= 1500) {
                     isDue = true;
                     reason = `Mileage milestone reached (${targetMilestone.toLocaleString()} mi interval).`;
@@ -135,7 +157,6 @@ if (!activeSchedule || !activeSchedule.length) {
                     isDue = true;
                     reason = `Within 1,500 mi of ${nextMilestone.toLocaleString()} mi interval.`;
                 } else if (mileage >= interval && milesSinceCycle > 1500 && milesToNext > 1500) {
-                    // Overdue if never completed
                     isDue = true;
                     reason = `Overdue from ${targetMilestone.toLocaleString()} mi (or verify history).`;
                 } else if (milesToNext > 1500 && milesToNext <= 4000) {
@@ -144,11 +165,10 @@ if (!activeSchedule || !activeSchedule.length) {
                 }
             }
 
-            // 2. Evaluate Time (Whichever comes first rule)
+            // Time calculation (whichever comes first)
             if (item.intervalMonths) {
                 const intervalMo = item.intervalMonths;
                 const monthsSinceCycle = age.totalMonths % intervalMo;
-                const monthsToNext = intervalMo - monthsSinceCycle;
 
                 if (age.totalMonths >= intervalMo && monthsSinceCycle <= 1) {
                     isDue = true;
@@ -168,10 +188,9 @@ if (!activeSchedule || !activeSchedule.length) {
             }
         }
 
-        // Render to Screen
         renderOutput({
             vin, mileage, inServiceDate, age,
-            year, make, model, engineDisplacement, driveType, fuel, transmission,
+            year, make, model: rawModel, engineDisplacement, driveType, fuel, transmission,
             dueNow, upcoming
         });
 
@@ -186,33 +205,55 @@ if (!activeSchedule || !activeSchedule.length) {
 // ==========================================
 function renderOutput(data) {
     const resultContainer = document.getElementById("result");
+    const pricedTotal = data.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
 
     let dueHtml = "";
     if (data.dueNow.length > 0) {
-        dueHtml = data.dueNow.map(s => `
-            <div class="service-card due">
-                <div>
-                    <div class="service-title">${s.name}</div>
-                    <div class="service-desc">${s.reason} — <em>${s.note}</em></div>
+        dueHtml = data.dueNow.map(s => {
+            const priceTag = (s.price !== undefined && s.price !== null) ? `<span class="service-price">$${s.price.toLocaleString()}</span>` : "";
+            return `
+                <div class="service-card due">
+                    <div>
+                        <div class="service-title">
+                            ${s.name}
+                            ${priceTag}
+                        </div>
+                        <div class="service-desc">${s.reason} — <em>${s.note}</em></div>
+                    </div>
+                    <span class="badge ${s.badgeType}">RECOMMENDED</span>
                 </div>
-                <span class="badge ${s.badgeType}">RECOMMENDED</span>
-            </div>
-        `).join("");
+            `;
+        }).join("");
+
+        if (pricedTotal > 0) {
+            dueHtml += `
+                <div class="price-summary">
+                    <div>Estimated Subtotal (Priced Services):</div>
+                    <span>$${pricedTotal.toLocaleString()}</span>
+                </div>
+            `;
+        }
     } else {
         dueHtml = `<div class="empty-state">✅ No factory services currently due.</div>`;
     }
 
     let upcomingHtml = "";
     if (data.upcoming.length > 0) {
-        upcomingHtml = data.upcoming.map(s => `
-            <div class="service-card upcoming">
-                <div>
-                    <div class="service-title">${s.name}</div>
-                    <div class="service-desc">${s.reason}</div>
+        upcomingHtml = data.upcoming.map(s => {
+            const priceTag = (s.price !== undefined && s.price !== null) ? `<span class="service-price">$${s.price.toLocaleString()}</span>` : "";
+            return `
+                <div class="service-card upcoming">
+                    <div>
+                        <div class="service-title">
+                            ${s.name}
+                            ${priceTag}
+                        </div>
+                        <div class="service-desc">${s.reason}</div>
+                    </div>
+                    <span class="badge badge-upcoming">COMING UP</span>
                 </div>
-                <span class="badge badge-upcoming">COMING UP</span>
-            </div>
-        `).join("");
+            `;
+        }).join("");
     }
 
     resultContainer.innerHTML = `
@@ -245,10 +286,14 @@ function renderOutput(data) {
         </div>
     `;
 
-    // DMS Copy Button Logic
     document.getElementById("copyNotesBtn").addEventListener("click", () => {
-        const dueList = data.dueNow.map(i => `- ${i.name} (${i.reason})`).join("\n");
-        const dmsText = `VEHICLE: ${data.year} ${data.make} ${data.model} (${data.mileage.toLocaleString()} mi)\nAGE: ${data.age.years}y ${data.age.months}m\nRECOMMENDED SERVICES:\n${dueList || "None"}`;
+        const dueList = data.dueNow.map(i => {
+            const priceStr = i.price ? ` ($${i.price})` : "";
+            return `- ${i.name}${priceStr} [${i.reason}]`;
+        }).join("\n");
+
+        const totalStr = pricedTotal > 0 ? `\nESTIMATED TOTAL: $${pricedTotal.toLocaleString()}` : "";
+        const dmsText = `VEHICLE: ${data.year} ${data.make} ${data.model} (${data.mileage.toLocaleString()} mi)\nAGE: ${data.age.years}y ${data.age.months}m\nRECOMMENDED SERVICES:\n${dueList || "None"}${totalStr}`;
 
         navigator.clipboard.writeText(dmsText).then(() => {
             const btn = document.getElementById("copyNotesBtn");
@@ -263,14 +308,12 @@ function renderOutput(data) {
 // ==========================================
 document.getElementById("decodeButton").addEventListener("click", decodeVehicle);
 
-// Allow pressing "Enter" from any input
 ["vin", "mileage", "inServiceDate"].forEach(id => {
     document.getElementById(id).addEventListener("keypress", (e) => {
         if (e.key === "Enter") decodeVehicle();
     });
 });
 
-// Clear Button
 document.getElementById("clearButton").addEventListener("click", () => {
     document.getElementById("vin").value = "";
     document.getElementById("mileage").value = "";
