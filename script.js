@@ -2,7 +2,7 @@
 // SERVICETOOL - ADVISOR QUICK LOOKUP ENGINE
 // ==========================================
 
-// Built-in fallback database so it NEVER fails if fetch() is blocked locally
+// Built-in fallback database
 const fallbackDB = {
   "MASERATI": {
     "GHIBLI": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] },
@@ -13,6 +13,37 @@ const fallbackDB = {
 };
 
 let schedulesDB = fallbackDB;
+let lastDecodedVehicle = null;
+
+// Brand-Specific Value Narratives
+const itemNarratives = {
+  "FIAT": {
+    "oil_service": "The MultiAir hydraulic valve system relies 100% on pristine oil pressure. Fresh oil is your best low-cost protection against a $2,000 actuator repair.",
+    "spark_plugs": "MultiAir turbos are sensitive to spark gap wear. Fresh plugs maintain peak MPG and prevent ignition coil failure.",
+    "brake_fluid": "Brake fluid absorbs moisture over 2 years. Flushing it prevents rust in the calipers and avoids costly ABS repairs.",
+    "cabin_filter": "Protects your blower motor and keeps AC cooling efficiently without straining the system.",
+    "engine_filter": "Maximizes your fuel efficiency and keeps debris out of the turbocharger.",
+    "default": "Regular preventative maintenance protects vehicle value and stops small issues from becoming expensive repair bills."
+  },
+  "ALFA ROMEO": {
+    "oil_service": "The all-aluminum turbo operates at high boost and heat. Factory synthetic protects the turbo bearings and ensures sharp MultiAir valve timing for long-term reliability.",
+    "brake_fluid": "The Giulia/Stelvio uses a brake-by-wire Integrated Brake System (IBS). Fresh fluid every 2 years keeps the hydraulic valves clean and pedal response firm.",
+    "spark_plugs": "High-boost turbocharged engines demand clean combustion. Fresh plugs prevent micro-misfires and keep throttle response instantaneous.",
+    "drive_belt": "The high-compression accessory drive belt is essential for alternator and water pump reliability—vital for worry-free ownership.",
+    "cabin_filter": "Maintains clean airflow and protects the climate evaporator core from debris.",
+    "engine_filter": "Ensures the twin-scroll turbo receives clean, unrestricted airflow for maximum power.",
+    "default": "Essential precision maintenance to preserve your Alfa's performance, handling dynamics, and long-term mechanical health."
+  },
+  "MASERATI": {
+    "oil_service": "Your Maserati's high-output, Ferrari-developed twin-turbo engine requires strict adherence to factory-spec synthetic oil to protect precision bearings and maintain exotic performance.",
+    "brake_fluid": "Brembo high-performance calipers generate extreme operating heat. Fresh fluid prevents moisture boil, protecting braking response and preserving the calipers.",
+    "spark_plugs": "Precision plug renewal every 37,500 miles ensures clean combustion and preserves the engine's signature power curve and exhaust note.",
+    "drive_belt": "Auxiliary belts operate under high RPM load. Timely replacement is factory protocol to ensure flawless grand touring reliability.",
+    "cabin_filter": "Maintains pristine cabin air quality and protects Maserati's specialized dual-zone climate system.",
+    "engine_filter": "Twin turbochargers require balanced, unrestricted breathing to deliver instantaneous boost.",
+    "default": "Factory protocol maintenance designed to keep your Maserati operating in 100% peak, flawless condition."
+  }
+};
 
 // Load external schedule database
 async function loadSchedules() {
@@ -23,14 +54,11 @@ async function loadSchedules() {
             console.log("Loaded schedules.json successfully.");
         }
     } catch (err) {
-        console.warn("Using built-in fallback schedules (local file mode).");
+        console.warn("Using built-in fallback schedules.");
     }
 }
 loadSchedules();
 
-// ==========================================
-// DATE & AGE HELPER
-// ==========================================
 function calculateAge(inServiceDate) {
     const start = new Date(inServiceDate + "T00:00:00");
     const today = new Date();
@@ -47,16 +75,12 @@ function calculateAge(inServiceDate) {
     return { years, months, totalMonths };
 }
 
-// ==========================================
-// SMART MODEL MATCHER
-// ==========================================
 function findScheduleForVehicle(make, rawModel, engineDisplacement) {
     if (!schedulesDB[make]) return schedulesDB["DEFAULT"] || [];
 
     const brandModels = schedulesDB[make];
     let matchedKey = null;
 
-    // Check if the NHTSA model name contains our key (e.g. "GHIBLI S Q4" contains "GHIBLI")
     for (const key of Object.keys(brandModels)) {
         if (rawModel.includes(key) || key.includes(rawModel)) {
             matchedKey = key;
@@ -67,8 +91,6 @@ function findScheduleForVehicle(make, rawModel, engineDisplacement) {
     if (!matchedKey) return schedulesDB["DEFAULT"] || [];
 
     const engineVariants = brandModels[matchedKey];
-    
-    // Match exact engine, or default to the first engine listed
     if (engineVariants[engineDisplacement]) {
         return engineVariants[engineDisplacement];
     }
@@ -81,9 +103,6 @@ function findScheduleForVehicle(make, rawModel, engineDisplacement) {
     return schedulesDB["DEFAULT"] || [];
 }
 
-// ==========================================
-// MAIN DECODE & CALCULATION FUNCTION
-// ==========================================
 async function decodeVehicle() {
     const vinInput = document.getElementById("vin");
     const mileageInput = document.getElementById("mileage");
@@ -129,8 +148,6 @@ async function decodeVehicle() {
         const transmission = v.TransmissionStyle || "Automatic";
 
         const age = calculateAge(inServiceDate);
-
-        // Smarter fuzzy schedule matching
         const activeSchedule = findScheduleForVehicle(make, rawModel, engineDisplacement);
 
         let dueNow = [];
@@ -142,7 +159,6 @@ async function decodeVehicle() {
             let reason = "";
             let badgeType = "badge-due";
 
-            // Mileage calculation
             if (item.intervalMiles) {
                 const interval = item.intervalMiles;
                 const milesSinceCycle = mileage % interval;
@@ -165,7 +181,6 @@ async function decodeVehicle() {
                 }
             }
 
-            // Time calculation (whichever comes first)
             if (item.intervalMonths) {
                 const intervalMo = item.intervalMonths;
                 const monthsSinceCycle = age.totalMonths % intervalMo;
@@ -188,11 +203,13 @@ async function decodeVehicle() {
             }
         }
 
-        renderOutput({
+        lastDecodedVehicle = {
             vin, mileage, inServiceDate, age,
             year, make, model: rawModel, engineDisplacement, driveType, fuel, transmission,
             dueNow, upcoming
-        });
+        };
+
+        renderOutput(lastDecodedVehicle);
 
     } catch (err) {
         console.error(err);
@@ -201,7 +218,7 @@ async function decodeVehicle() {
 }
 
 // ==========================================
-// RENDER UI & COPY TO CLIPBOARD
+// RENDER UI
 // ==========================================
 function renderOutput(data) {
     const resultContainer = document.getElementById("result");
@@ -263,7 +280,10 @@ function renderOutput(data) {
                     <h2>${data.year} ${data.make} ${data.model}</h2>
                     <p style="font-size:13px; color:var(--text-secondary); margin-top:3px;">VIN: <strong>${data.vin}</strong></p>
                 </div>
-                <div class="vehicle-badge">${data.mileage.toLocaleString()} Miles</div>
+                <div class="banner-actions">
+                    <button id="openStoryModalBtn" class="btn-story">💬 Advisor Pitch & SMS Story</button>
+                    <div class="vehicle-badge">${data.mileage.toLocaleString()} Miles</div>
+                </div>
             </div>
 
             <div class="specs-grid">
@@ -286,6 +306,10 @@ function renderOutput(data) {
         </div>
     `;
 
+    // Hook up Master Pitch Modal Button
+    document.getElementById("openStoryModalBtn").addEventListener("click", openStoryModal);
+
+    // DMS Notes Copy Button
     document.getElementById("copyNotesBtn").addEventListener("click", () => {
         const dueList = data.dueNow.map(i => {
             const priceStr = i.price ? ` ($${i.price})` : "";
@@ -304,8 +328,102 @@ function renderOutput(data) {
 }
 
 // ==========================================
-// EVENT LISTENERS
+// STORY & SMS GENERATOR
 // ==========================================
+function openStoryModal() {
+    if (!lastDecodedVehicle) return;
+
+    const v = lastDecodedVehicle;
+    const modal = document.getElementById("storyModal");
+    const title = document.getElementById("modalVehicleTitle");
+    const wordTrackEl = document.getElementById("wordTrackText");
+    const smsEl = document.getElementById("smsText");
+
+    title.textContent = `${v.year} ${v.make} ${v.model} — Service Story`;
+
+    const brandKey = v.make.includes("MASERATI") ? "MASERATI" : (v.make.includes("ALFA") ? "ALFA ROMEO" : (v.make.includes("FIAT") ? "FIAT" : "ALFA ROMEO"));
+    const narratives = itemNarratives[brandKey] || itemNarratives["ALFA ROMEO"];
+
+    if (v.dueNow.length === 0) {
+        wordTrackEl.innerHTML = `<p>“Mr./Ms. Customer, great news on your ${v.model}. At ${v.mileage.toLocaleString()} miles, your factory maintenance is currently up to date. We'll complete our multi-point inspection to ensure everything looks pristine and let you know when the next visit is expected.”</p>`;
+        smsEl.value = `Hi! Your ${v.year} ${v.make} ${v.model} is currently up to date on all factory maintenance intervals. We are completing your multi-point inspection now!`;
+        modal.style.display = "flex";
+        return;
+    }
+
+    // A. Build Spoken Word-Track
+    let brandIntro = "";
+    let brandClose = "";
+
+    if (brandKey === "MASERATI") {
+        brandIntro = `“Looking at your ${v.model}, because of the high-performance engineering on these twin-turbo powertrains, the factory maintenance schedule is designed to keep the car performing as close to brand-new as possible.”`;
+        brandClose = `“Taking care of these today maintains that crisp exotic throttle feel and protects the vehicle's long-term resale provenance. Would you like us to proceed while it's in the shop?”`;
+    } else if (brandKey === "ALFA ROMEO") {
+        brandIntro = `“I pulled up the factory interval for your ${v.model}. With modern Alfa powertrains, staying on top of scheduled service is what ensures long-term Italian reliability and keeps the car driving like day one.”`;
+        brandClose = `“Addressing this today ensures uninterrupted reliability and protects your factory warranty. Would you like me to get the technicians started?”`;
+    } else {
+        brandIntro = `“Looking over your ${v.model} at ${v.mileage.toLocaleString()} miles, doing these factory services today is all about smart preventative maintenance and avoiding big repair bills down the road.”`;
+        brandClose = `“Staying proactive on these items keeps your operating costs low and prevents any surprise breakdowns. Should we go ahead and take care of these for you?”`;
+    }
+
+    const itemPoints = v.dueNow.map(i => {
+        const customReason = narratives[i.id] || i.note || narratives["default"];
+        const priceStr = i.price ? ` ($${i.price})` : "";
+        return `<p>• <strong>${i.name}${priceStr}:</strong> ${customReason}</p>`;
+    }).join("");
+
+    wordTrackEl.innerHTML = `
+        <p>${brandIntro}</p>
+        ${itemPoints}
+        <p>${brandClose}</p>
+    `;
+
+    // B. Build Customer SMS
+    const smsItems = v.dueNow.map(i => {
+        const priceStr = i.price ? ` - $${i.price}` : "";
+        const customReason = narratives[i.id] || i.name;
+        return `• ${i.name}${priceStr} (${customReason})`;
+    }).join("\n");
+
+    const pricedTotal = v.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
+    const totalLine = pricedTotal > 0 ? `\nEstimated Total: $${pricedTotal.toLocaleString()}` : "";
+
+    smsEl.value = `Hi [Customer Name]! Here is a quick update on your ${v.year} ${v.model} (${v.mileage.toLocaleString()} mi). Based on factory intervals, the following maintenance is due for this visit:\n\n${smsItems}${totalLine}\n\nLet me know if you'd like us to take care of these for you today!`;
+
+    modal.style.display = "flex";
+}
+
+// Modal Event Listeners
+document.getElementById("closeModalBtn").addEventListener("click", () => {
+    document.getElementById("storyModal").style.display = "none";
+});
+
+document.getElementById("storyModal").addEventListener("click", (e) => {
+    if (e.target.id === "storyModal") {
+        document.getElementById("storyModal").style.display = "none";
+    }
+});
+
+// Copy Buttons inside Modal
+document.getElementById("copyWordTrackBtn").addEventListener("click", () => {
+    const text = document.getElementById("wordTrackText").innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("copyWordTrackBtn");
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => { btn.textContent = "📋 Copy Script"; }, 2000);
+    });
+});
+
+document.getElementById("copySmsBtn").addEventListener("click", () => {
+    const text = document.getElementById("smsText").value;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("copySmsBtn");
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => { btn.textContent = "📋 Copy SMS"; }, 2000);
+    });
+});
+
+// Main Listeners
 document.getElementById("decodeButton").addEventListener("click", decodeVehicle);
 
 ["vin", "mileage", "inServiceDate"].forEach(id => {
@@ -319,5 +437,6 @@ document.getElementById("clearButton").addEventListener("click", () => {
     document.getElementById("mileage").value = "";
     document.getElementById("inServiceDate").value = "";
     document.getElementById("result").innerHTML = "";
+    lastDecodedVehicle = null;
     document.getElementById("vin").focus();
 });
