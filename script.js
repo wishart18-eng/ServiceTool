@@ -529,39 +529,55 @@ document.getElementById("clearButton").addEventListener("click", () => {
 
 
 // ==========================================
-// LIVE CAMERA SCANNER & AUTO-CAPTURE ENGINE
+// HIGH-PRECISION BARCODE + TUNED VIN SCANNER
 // ==========================================
 const cameraBtn = document.getElementById("cameraBtn");
 const scannerModal = document.getElementById("scannerModal");
 const closeScannerBtn = document.getElementById("closeScannerBtn");
 const scannerVideo = document.getElementById("scannerVideo");
 const scannerCanvas = document.getElementById("scannerCanvas");
-const scannerStatus = document.getElementById("scannerStatus");
+const scannerLiveRead = document.getElementById("scannerLiveRead");
 const scannerReticle = document.getElementById("scannerReticle");
+const forceSnapBtn = document.getElementById("forceSnapBtn");
 const vinInputField = document.getElementById("vin");
 
 let videoStream = null;
 let scanTimer = null;
 let isProcessingFrame = false;
 let ocrWorker = null;
+let barcodeReader = null;
 
+// 1. Initialize High-Precision Tesseract (Restricted strictly to VIN charset)
 async function initOCRWorker() {
     if (!ocrWorker) {
+        scannerLiveRead.textContent = "Calibrating VIN scanner...";
         ocrWorker = await Tesseract.createWorker('eng');
+        
+        // CRITICAL TUNING FOR VIN PLATES:
+        // - Only valid VIN characters (No I, O, Q, no lowercase, no punctuation)
+        // - Single text line PSM (7) instead of multi-line book mode (3)
+        await ocrWorker.setParameters({
+            tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
+            tessedit_pageseg_mode: '7'
+        });
+    }
+    if (!barcodeReader && window.ZXing) {
+        barcodeReader = new ZXing.BrowserMultiFormatReader();
     }
 }
 
+// 2. Launch Camera
 async function startLiveScanner() {
     try {
         scannerModal.style.display = "flex";
-        scannerStatus.textContent = "Starting camera...";
+        scannerLiveRead.textContent = "Starting camera...";
         scannerReticle.classList.remove("locked");
 
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                width: { ideal: 1920 }, // Request high-definition for small VIN characters
+                height: { ideal: 1080 }
             }
         });
 
@@ -570,13 +586,14 @@ async function startLiveScanner() {
 
         await initOCRWorker();
 
-        scannerStatus.textContent = "Aim VIN inside the box...";
+        scannerLiveRead.textContent = "Aim at door barcode or dash VIN...";
         isProcessingFrame = false;
 
-        scanTimer = setInterval(captureAndAnalyzeFrame, 400);
+        // Loop every 450ms
+        scanTimer = setInterval(analyzeFrame, 450);
 
     } catch (err) {
-        console.error("Camera access error:", err);
+        console.error("Camera error:", err);
         alert("Camera permission denied or camera not found.");
         stopLiveScanner();
     }
@@ -595,7 +612,29 @@ function stopLiveScanner() {
     if (scannerModal) scannerModal.style.display = "none";
 }
 
-async function captureAndAnalyzeFrame() {
+// 3. Contrast & Binarization Enhancer for Stamped Metal and Backlit Screens
+function enhanceContrast(ctx, width, height) {
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const d = imgData.data;
+
+    for (let i = 0; i < d.length; i += 4) {
+        // Luminance
+        let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        
+        // Contrast expansion curve (makes faint etched characters bold)
+        gray = ((gray - 128) * 2.2) + 128;
+        gray = Math.max(0, Math.min(255, gray));
+
+        d[i] = gray;
+        d[i + 1] = gray;
+        d[i + 2] = gray;
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+}
+
+// 4. Main Frame Analysis (Barcode Check -> OCR Fallback)
+async function analyzeFrame() {
     if (isProcessingFrame || !ocrWorker || scannerVideo.readyState !== 4) return;
     isProcessingFrame = true;
 
@@ -603,52 +642,91 @@ async function captureAndAnalyzeFrame() {
         const vw = scannerVideo.videoWidth;
         const vh = scannerVideo.videoHeight;
 
+        // Tightly crop the reticle box where the user aims
         const cropW = Math.floor(vw * 0.85);
-        const cropH = Math.floor(vh * 0.28);
+        const cropH = Math.floor(vh * 0.22);
         const cropX = Math.floor((vw - cropW) / 2);
         const cropY = Math.floor((vh - cropH) / 2);
 
-        scannerCanvas.width = cropW;
-        scannerCanvas.height = cropH;
+        // Scale canvas up 2x so small stamped VIN characters are tall enough for OCR
+        scannerCanvas.width = cropW * 2;
+        scannerCanvas.height = cropH * 2;
         const ctx = scannerCanvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
 
-        ctx.drawImage(scannerVideo, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+        // Draw zoomed crop
+        ctx.drawImage(scannerVideo, cropX, cropY, cropW, cropH, 0, 0, scannerCanvas.width, scannerCanvas.height);
 
+        // A. Check for Barcodes First (Code 39 / DataMatrix automotive standard)
+        if (barcodeReader) {
+            try {
+                const barcodeResult = barcodeReader.decode(scannerCanvas);
+                if (barcodeResult && barcodeResult.text) {
+                    let bcText = barcodeResult.text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    // Some imported barcodes prepend 'I' or '1'
+                    if (bcText.length === 18 && (bcText.startsWith('I') || bcText.startsWith('1'))) {
+                        bcText = bcText.substring(1);
+                    }
+                    if (bcText.length === 17) {
+                        lockAndCapture(bcText, "Barcode");
+                        return;
+                    }
+                }
+            } catch (barcodeErr) {
+                // No barcode in this frame; proceed to OCR
+            }
+        }
+
+        // B. Apply Contrast Enhancer for Plain Text / Stamped Plates
+        enhanceContrast(ctx, scannerCanvas.width, scannerCanvas.height);
+
+        // C. Run Tuned OCR
         const { data: { text } } = await ocrWorker.recognize(scannerCanvas);
         let raw = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const matches = raw.match(/[A-Z0-9]{17}/g);
 
+        if (raw.length > 0) {
+            scannerLiveRead.textContent = `Reading: ${raw.slice(0, 17)} (${raw.length}/17)`;
+        }
+
+        // Search for 17-character sequence
+        const matches = raw.match(/[A-Z0-9]{17}/g);
         if (matches && matches.length > 0) {
             for (let candidate of matches) {
+                // Auto-correct common OCR mix-ups (I -> 1, O -> 0, Q -> 0)
                 candidate = candidate
                     .replace(/I/g, '1')
                     .replace(/O/g, '0')
                     .replace(/Q/g, '0');
 
                 const check = validateVIN(candidate);
-
                 if (check.valid) {
-                    scannerReticle.classList.add("locked");
-                    scannerStatus.textContent = `✅ VIN Detected: ${candidate}`;
-
-                    if (navigator.vibrate) navigator.vibrate(200);
-
-                    vinInputField.value = candidate;
-
-                    setTimeout(() => {
-                        stopLiveScanner();
-                    }, 500);
-
+                    lockAndCapture(candidate, "Text");
                     return;
                 }
             }
         }
+
     } catch (err) {
-        console.error("Frame scan error:", err);
+        console.error("Analysis error:", err);
     } finally {
         isProcessingFrame = false;
     }
 }
 
+// Trigger capture lock
+function lockAndCapture(vin, source) {
+    scannerReticle.classList.add("locked");
+    scannerLiveRead.textContent = `✅ ${source} Locked: ${vin}`;
+
+    if (navigator.vibrate) navigator.vibrate(200);
+
+    vinInputField.value = vin;
+
+    setTimeout(() => {
+        stopLiveScanner();
+    }, 450);
+}
+
 if (cameraBtn) cameraBtn.addEventListener("click", startLiveScanner);
 if (closeScannerBtn) closeScannerBtn.addEventListener("click", stopLiveScanner);
+if (forceSnapBtn) forceSnapBtn.addEventListener("click", analyzeFrame);
