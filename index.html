@@ -1,29 +1,44 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ServiceTool VIN Decoder</title>
+    <title>ServiceTool | Advisor Lookup</title>
     <link rel="stylesheet" href="./style.css">
 </head>
-
 <body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>ServiceTool <span>Quick Advisor Lookup</span></h1>
+        </header>
 
+        <section class="card input-card">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="vin">Vehicle VIN (17 digits)</label>
+                    <input type="text" id="vin" placeholder="e.g. ZARFAEEN..." maxlength="17" autofocus autocomplete="off">
+                </div>
 
-<h1>ServiceTool VIN Decoder</h1>
+                <div class="form-group">
+                    <label for="mileage">Current Mileage</label>
+                    <input type="number" id="mileage" placeholder="e.g. 29500" min="0">
+                </div>
 
-<input type="text" id="vin" placeholder="Enter VIN">
-<input type="number" id="mileage" placeholder="Current Mileage">
-<input type="date" id="inServiceDate">
-<button id="decodeButton">
-    Decode
-</button>
+                <div class="form-group">
+                    <label for="inServiceDate">In-Service Date</label>
+                    <input type="date" id="inServiceDate">
+                </div>
+            </div>
 
-<div id="result"></div>
+            <div class="button-row">
+                <button id="decodeButton" class="btn btn-primary">Lookup Vehicle</button>
+                <button id="clearButton" class="btn btn-secondary">Clear</button>
+            </div>
+        </section>
 
-<script src="./script.js" defer></script>
+        <main id="result" class="results-container"></main>
+    </div>
 
-
+    <script src="./script.js" defer></script>
 </body>
 </html>
