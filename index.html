@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceTool VIN Decoder</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
@@ -14,14 +14,15 @@
 <h1>ServiceTool VIN Decoder</h1>
 
 <input type="text" id="vin" placeholder="Enter VIN">
-
-<button onclick="decodeVIN()">
+<input type="number" id="mileage" placeholder="Current Mileage">
+<input type="date" id="inServiceDate">
+<button id="decodeButton">
     Decode
 </button>
 
 <div id="result"></div>
 
-<script src="script.js"></script>
+<script src="./script.js" defer></script>
 ```
 
 </body>
