@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceTool VIN Decoder</title>
+    <!-- On-Device OCR Scanner Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="./style.css">
 </head>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ServiceTool">
 <body>
 
     <h1>ServiceTool VIN Decoder</h1>
 
     <div class="input-row">
-        <input type="text" id="vin" placeholder="Enter VIN" maxlength="17" autofocus autocomplete="off">
+        <!-- VIN Input with Camera Scan Button -->
+        <div class="vin-input-wrapper">
+            <input type="text" id="vin" placeholder="Enter or Scan VIN" maxlength="17" autofocus autocomplete="off">
+            <button type="button" id="cameraBtn" class="btn-cam" title="Scan VIN with Camera">📷</button>
+            <input type="file" id="vinCameraInput" accept="image/*" capture="environment" style="display: none;">
+        </div>
+
         <input type="number" id="mileage" placeholder="Current Mileage" min="0">
         <input type="text" id="inServiceDate" placeholder="In-Service (e.g. Aug 20, 2021)">
         <input type="text" id="customerName" placeholder="Customer Name (Optional)">
