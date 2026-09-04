@@ -61,7 +61,42 @@ h1 {
     border: 1px solid var(--slate-border);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
+/* VIN Input with Camera Button */
+.vin-input-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 240px;
+}
 
+.vin-input-wrapper input {
+    width: 100% !important;
+    padding-right: 42px !important; /* Space so text doesn't overlap the camera icon */
+}
+
+.btn-cam {
+    position: absolute;
+    right: 4px;
+    background: transparent !important;
+    border: none !important;
+    font-size: 18px;
+    padding: 6px 8px !important;
+    cursor: pointer;
+    box-shadow: none !important;
+    color: var(--slate-heading);
+}
+
+.btn-cam:hover {
+    transform: scale(1.15);
+    background: transparent !important;
+}
+
+/* Mobile full-width adjustment */
+@media (max-width: 600px) {
+    .vin-input-wrapper {
+        width: 100% !important;
+    }
+}
 input {
     font-family: inherit;
     padding: 10px 14px;
