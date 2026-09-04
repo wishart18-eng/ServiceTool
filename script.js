@@ -14,7 +14,6 @@ const fallbackDB = {
 let schedulesDB = fallbackDB;
 let lastDecodedVehicle = null;
 
-// Brand-Specific Value Narratives
 const itemNarratives = {
   "FIAT": {
     "oil_service": "The MultiAir hydraulic valve system relies 100% on pristine oil pressure. Fresh oil is your best low-cost protection against a $2,000 actuator repair.",
@@ -55,34 +54,57 @@ async function loadSchedules() {
 loadSchedules();
 
 // ==========================================
-// FUZZY DATE PARSER
+// OFFICIAL VIN VALIDATOR & CHECK-DIGIT
 // ==========================================
+function validateVIN(vin) {
+    if (!vin || vin.length !== 17) return { valid: false };
+    vin = vin.toUpperCase();
+
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+        return { valid: false };
+    }
+
+    const transliteration = {
+        'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8,
+        'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'P': 7, 'R': 9,
+        'S': 2, 'T': 3, 'U': 4, 'V': 5, 'W': 6, 'X': 7, 'Y': 8, 'Z': 9,
+        '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9
+    };
+
+    const weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
+
+    let sum = 0;
+    for (let i = 0; i < 17; i++) {
+        sum += transliteration[vin[i]] * weights[i];
+    }
+
+    const remainder = sum % 11;
+    const expectedCheck = remainder === 10 ? 'X' : String(remainder);
+
+    return {
+        valid: true,
+        strictCheckDigitPassed: (vin[8] === expectedCheck),
+        vin: vin
+    };
+}
+
+// Fuzzy Date Parser
 function parseFuzzyDate(raw) {
     if (!raw) return null;
     const clean = raw.trim().toLowerCase();
 
     const monthMap = {
-        jan: 0, january: 0,
-        feb: 1, february: 1,
-        mar: 2, march: 2,
-        apr: 3, april: 3,
-        may: 4,
-        jun: 5, june: 5,
-        jul: 6, july: 6,
-        aug: 7, august: 7,
-        sep: 8, sept: 8, september: 8,
-        oct: 9, october: 9,
-        nov: 10, november: 10,
-        dec: 11, december: 11
+        jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2,
+        apr: 3, april: 3, may: 4, jun: 5, june: 5, jul: 6, july: 6,
+        aug: 7, august: 7, sep: 8, sept: 8, september: 8, oct: 9, october: 9,
+        nov: 10, november: 10, dec: 11, december: 11
     };
 
-    // 1. Year only: e.g. "2020" or "2022"
     if (/^\d{4}$/.test(clean)) {
         const y = parseInt(clean, 10);
         return { date: new Date(y, 6, 1), label: `Mid-${y} (Est)` };
     }
 
-    // 2. Month name + year: e.g. "aug 20", "august 2020", "aug 2020"
     const textMatch = clean.match(/^([a-z]+)\s*['\s/-]?\s*(\d{2,4})$/);
     if (textMatch) {
         const mKey = textMatch[1];
@@ -95,7 +117,6 @@ function parseFuzzyDate(raw) {
         }
     }
 
-    // 3. Numeric MM/YY or MM/YYYY: e.g. "08/20", "8/20", "08/2020"
     const slashMatch = clean.match(/^(\d{1,2})[\/\-](\d{2,4})$/);
     if (slashMatch) {
         const m = parseInt(slashMatch[1], 10) - 1;
@@ -107,7 +128,6 @@ function parseFuzzyDate(raw) {
         }
     }
 
-    // 4. Standard full date parse fallback: e.g. "08/15/2020" or "2020-08-15"
     const standard = new Date(raw);
     if (!isNaN(standard.getTime())) {
         return { date: standard, label: standard.toLocaleDateString() };
@@ -116,7 +136,6 @@ function parseFuzzyDate(raw) {
     return null;
 }
 
-// Calculate age from parsed Date
 function calculateAgeFromDate(startDate) {
     const today = new Date();
     let years = today.getFullYear() - startDate.getFullYear();
@@ -131,9 +150,6 @@ function calculateAgeFromDate(startDate) {
     return { years: Math.max(0, years), months, totalMonths };
 }
 
-// ==========================================
-// SMART MODEL MATCHER
-// ==========================================
 function findScheduleForVehicle(make, rawModel, engineDisplacement) {
     if (!schedulesDB[make]) return schedulesDB["DEFAULT"] || [];
 
@@ -162,9 +178,7 @@ function findScheduleForVehicle(make, rawModel, engineDisplacement) {
     return schedulesDB["DEFAULT"] || [];
 }
 
-// ==========================================
-// MAIN DECODE & CALCULATION FUNCTION
-// ==========================================
+// Decode Function
 async function decodeVehicle() {
     const vinInput = document.getElementById("vin");
     const mileageInput = document.getElementById("mileage");
@@ -177,27 +191,28 @@ async function decodeVehicle() {
     const inServiceRaw = dateInput.value.trim();
     const customerName = nameInput.value.trim();
 
-    if (vin.length !== 17) {
-        resultContainer.innerHTML = `<div class="card"><p style="color:var(--danger); font-weight:bold;">⚠️ Please enter a complete 17-character VIN.</p></div>`;
+    const vinCheck = validateVIN(vin);
+    if (!vinCheck.valid) {
+        resultContainer.innerHTML = `<p style="color:red;"><strong>⚠️ Please enter a valid 17-character VIN (cannot contain I, O, or Q).</strong></p>`;
         return;
     }
+
     if (!mileage || mileage < 0) {
-        resultContainer.innerHTML = `<div class="card"><p style="color:var(--danger); font-weight:bold;">⚠️ Please enter valid current mileage.</p></div>`;
+        resultContainer.innerHTML = `<p style="color:red;"><strong>Please enter the current mileage.</strong></p>`;
         return;
     }
     if (!inServiceRaw) {
-        resultContainer.innerHTML = `<div class="card"><p style="color:var(--danger); font-weight:bold;">⚠️ Please enter an In-Service Date or Year (e.g. Aug 20, 2021).</p></div>`;
+        resultContainer.innerHTML = `<p style="color:red;"><strong>Please enter the in-service date or year.</strong></p>`;
         return;
     }
 
-    // Fuzzy Date Parsing
     const parsedDateObj = parseFuzzyDate(inServiceRaw);
     if (!parsedDateObj) {
-        resultContainer.innerHTML = `<div class="card"><p style="color:var(--danger); font-weight:bold;">⚠️ Could not recognize date format. Try: 'Aug 20', '08/2020', or '2021'.</p></div>`;
+        resultContainer.innerHTML = `<p style="color:red;"><strong>Could not recognize date. Try: 'Aug 20', '08/2020', or '2021'.</strong></p>`;
         return;
     }
 
-    resultContainer.innerHTML = `<div class="card"><p>Querying NHTSA database and calculating schedule...</p></div>`;
+    resultContainer.innerHTML = `<p>Decoding vehicle and calculating maintenance...</p>`;
 
     try {
         const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`);
@@ -205,7 +220,7 @@ async function decodeVehicle() {
         const data = await response.json();
 
         if (!data.Results || data.Results.length === 0) {
-            resultContainer.innerHTML = `<div class="card"><p>Vehicle not found. Check VIN.</p></div>`;
+            resultContainer.innerHTML = `<p><strong>No vehicle information found.</strong></p>`;
             return;
         }
 
@@ -214,6 +229,7 @@ async function decodeVehicle() {
         const rawModel = (v.Model || "UNKNOWN").toUpperCase();
         const year = v.ModelYear || "N/A";
         const engineDisplacement = v.DisplacementL ? parseFloat(v.DisplacementL).toFixed(1) : "3.0";
+        const cylinders = v.EngineCylinders || "Unknown";
         const driveType = v.DriveType || "N/A";
         const fuel = v.FuelTypePrimary || "Gasoline";
         const transmission = v.TransmissionStyle || "Automatic";
@@ -228,7 +244,6 @@ async function decodeVehicle() {
             let isDue = false;
             let isUpcoming = false;
             let reason = "";
-            let badgeType = "badge-due";
 
             if (item.intervalMiles) {
                 const interval = item.intervalMiles;
@@ -239,7 +254,7 @@ async function decodeVehicle() {
 
                 if (mileage >= interval && milesSinceCycle <= 1500) {
                     isDue = true;
-                    reason = `Mileage milestone reached (${targetMilestone.toLocaleString()} mi interval).`;
+                    reason = `Mileage reached (${targetMilestone.toLocaleString()} mi interval).`;
                 } else if (milesToNext <= 1500) {
                     isDue = true;
                     reason = `Within 1,500 mi of ${nextMilestone.toLocaleString()} mi interval.`;
@@ -248,7 +263,7 @@ async function decodeVehicle() {
                     reason = `Overdue from ${targetMilestone.toLocaleString()} mi (or verify history).`;
                 } else if (milesToNext > 1500 && milesToNext <= 4000) {
                     isUpcoming = true;
-                    reason = `Due at ${nextMilestone.toLocaleString()} mi (in ${milesToNext.toLocaleString()} mi).`;
+                    reason = `Due at ${nextMilestone.toLocaleString()} mi.`;
                 }
             }
 
@@ -258,17 +273,15 @@ async function decodeVehicle() {
 
                 if (age.totalMonths >= intervalMo && monthsSinceCycle <= 1) {
                     isDue = true;
-                    badgeType = "badge-time";
-                    reason += (reason ? " | " : "") + `Time milestone reached (${Math.floor(age.totalMonths / intervalMo) * (intervalMo / 12)} yr interval).`;
+                    reason += (reason ? " | " : "") + `Time milestone reached (${Math.floor(age.totalMonths / intervalMo) * (intervalMo / 12)} yr rule).`;
                 } else if (age.totalMonths >= intervalMo && monthsSinceCycle > 1) {
                     isDue = true;
-                    badgeType = "badge-time";
                     reason += (reason ? " | " : "") + `Time interval exceeded (${intervalMo / 12} yr rule).`;
                 }
             }
 
             if (isDue) {
-                dueNow.push({ ...item, reason, badgeType });
+                dueNow.push({ ...item, reason });
             } else if (isUpcoming) {
                 upcoming.push({ ...item, reason });
             }
@@ -278,7 +291,7 @@ async function decodeVehicle() {
             vin, mileage, customerName,
             inServiceLabel: parsedDateObj.label,
             age,
-            year, make, model: rawModel, engineDisplacement, driveType, fuel, transmission,
+            year, make, model: rawModel, engineDisplacement, cylinders, driveType, fuel, transmission,
             dueNow, upcoming
         };
 
@@ -286,101 +299,101 @@ async function decodeVehicle() {
 
     } catch (err) {
         console.error(err);
-        resultContainer.innerHTML = `<div class="card"><p style="color:var(--danger);">Error decoding VIN. Please check connection and try again.</p></div>`;
+        resultContainer.innerHTML = `<p style="color:red;"><strong>Unable to decode VIN. Please check connection and try again.</strong></p>`;
     }
 }
 
-// ==========================================
-// RENDER UI
-// ==========================================
+// Render Table
 function renderOutput(data) {
     const resultContainer = document.getElementById("result");
     const pricedTotal = data.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
 
-    let dueHtml = "";
+    let html = `
+        <div class="vehicle-result">
+            <h2>
+                ${data.year} ${data.make} ${data.model}
+                <button type="button" id="openStoryModalBtn" class="btn-story-action">💬 Advisor Pitch & SMS Story</button>
+            </h2>
+
+            <p><strong>VIN:</strong> ${data.vin}</p>
+            ${data.customerName ? `<p><strong>Customer:</strong> ${data.customerName}</p>` : ""}
+            <p><strong>Engine:</strong> ${data.engineDisplacement}L (${data.cylinders}-cylinder)</p>
+            <p><strong>Fuel:</strong> ${data.fuel}</p>
+            <p><strong>Transmission:</strong> ${data.transmission}</p>
+            <p><strong>Drive:</strong> ${data.driveType}</p>
+            <p><strong>Current Mileage:</strong> ${data.mileage.toLocaleString()} miles</p>
+            <p><strong>In-Service:</strong> ${data.inServiceLabel}</p>
+            <p><strong>Vehicle Age:</strong> ${data.age.years} years, ${data.age.months} months</p>
+
+            <hr>
+
+            <h2>Factory Maintenance Worksheet</h2>
+    `;
+
     if (data.dueNow.length > 0) {
-        dueHtml = data.dueNow.map(s => {
+        html += `
+            <h3>🔴 Recommended For This Visit</h3>
+            <div class="worksheet-table">
+                <div class="worksheet-header">
+                    <span>Scheduled Operation</span>
+                    <span>Status & Estimate</span>
+                </div>
+        `;
+
+        data.dueNow.forEach(s => {
             const priceTag = (s.price !== undefined && s.price !== null) ? `<span class="service-price">$${s.price.toLocaleString()}</span>` : "";
-            return `
-                <div class="service-card due">
-                    <div>
-                        <div class="service-title">
-                            ${s.name}
-                            ${priceTag}
+            html += `
+                <div class="service-row">
+                    <div class="service-info">
+                        <div class="service-title-line">
+                            <span class="status-indicator"></span>
+                            <span class="service-title-text">${s.name}</span>
                         </div>
-                        <div class="service-desc">${s.reason} — <em>${s.note}</em></div>
+                        <div class="service-details"><strong>Why:</strong> ${s.reason}</div>
+                        <div class="service-note-text">${s.note}</div>
                     </div>
-                    <span class="badge ${s.badgeType}">RECOMMENDED</span>
+                    <div class="service-right">
+                        ${priceTag}
+                        <span class="badge-due-pill">FACTORY DUE</span>
+                    </div>
                 </div>
             `;
-        }).join("");
+        });
 
         if (pricedTotal > 0) {
-            dueHtml += `
-                <div class="price-summary">
-                    <div>Estimated Subtotal (Priced Services):</div>
-                    <span>$${pricedTotal.toLocaleString()}</span>
+            html += `
+                <div class="worksheet-footer">
+                    <span class="footer-label">Estimated Subtotal (Priced Services):</span>
+                    <span class="footer-total-amount">$${pricedTotal.toLocaleString()}</span>
                 </div>
             `;
         }
+
+        html += `</div>`;
     } else {
-        dueHtml = `<div class="empty-state">✅ No factory services currently due.</div>`;
+        html += `<h3>🟢 No factory maintenance currently due.</h3>`;
     }
 
-    let upcomingHtml = "";
     if (data.upcoming.length > 0) {
-        upcomingHtml = data.upcoming.map(s => {
+        html += `<hr><h3>🟡 Approaching In Next Service Window</h3>`;
+        data.upcoming.forEach(s => {
             const priceTag = (s.price !== undefined && s.price !== null) ? `<span class="service-price">$${s.price.toLocaleString()}</span>` : "";
-            return `
-                <div class="service-card upcoming">
-                    <div>
-                        <div class="service-title">
-                            ${s.name}
-                            ${priceTag}
-                        </div>
-                        <div class="service-desc">${s.reason}</div>
-                    </div>
-                    <span class="badge badge-upcoming">COMING UP</span>
+            html += `
+                <div class="upcoming-row">
+                    <span><strong>${s.name}</strong> — ${s.reason}</span>
+                    <div>${priceTag}</div>
                 </div>
             `;
-        }).join("");
+        });
     }
 
-    resultContainer.innerHTML = `
-        <div class="card">
-            <div class="vehicle-banner">
-                <div>
-                    <h2>${data.year} ${data.make} ${data.model}</h2>
-                    <p style="font-size:13px; color:var(--text-secondary); margin-top:3px;">
-                        VIN: <strong>${data.vin}</strong>
-                        ${data.customerName ? ` | Customer: <strong>${data.customerName}</strong>` : ""}
-                    </p>
-                </div>
-                <div class="banner-actions">
-                    <button id="openStoryModalBtn" class="btn-story">💬 Advisor Pitch & SMS Story</button>
-                    <div class="vehicle-badge">${data.mileage.toLocaleString()} Miles</div>
-                </div>
-            </div>
-
-            <div class="specs-grid">
-                <div>Engine: <strong>${data.engineDisplacement}L</strong></div>
-                <div>Drive: <strong>${data.driveType}</strong></div>
-                <div>Transmission: <strong>${data.transmission}</strong></div>
-                <div>Age: <strong>${data.age.years} yrs, ${data.age.months} mos</strong></div>
-                <div>In-Service: <strong>${data.inServiceLabel}</strong></div>
-            </div>
-
-            <div class="section-title">🔴 Recommended Today / Due Now</div>
-            ${dueHtml}
-
-            ${data.upcoming.length > 0 ? `
-                <div class="section-title">🟡 Upcoming Service Window</div>
-                ${upcomingHtml}
-            ` : ""}
-
-            <button id="copyNotesBtn" class="btn btn-copy">📋 Copy Recommendations to DMS Notes</button>
+    html += `
+            <hr>
+            <button type="button" id="copyNotesBtn" class="btn-dms">📋 Copy Recommendations to DMS Notes</button>
         </div>
     `;
+
+    resultContainer.innerHTML = html;
 
     document.getElementById("openStoryModalBtn").addEventListener("click", openStoryModal);
 
@@ -402,9 +415,6 @@ function renderOutput(data) {
     });
 }
 
-// ==========================================
-// STORY & FUTURE-APPOINTMENT SMS GENERATOR
-// ==========================================
 function openStoryModal() {
     if (!lastDecodedVehicle) return;
 
@@ -422,13 +432,12 @@ function openStoryModal() {
     const greetingName = v.customerName ? ` ${v.customerName}` : " there";
 
     if (v.dueNow.length === 0) {
-        wordTrackEl.innerHTML = `<p>“Hi${greetingName}, looking ahead to your visit for the ${v.model}, great news: your factory maintenance is completely up to date. We will perform our full multi-point safety inspection to ensure everything remains in top shape.”</p>`;
-        smsEl.value = `Hi${greetingName}! Ahead of your upcoming service appointment for your ${v.year} ${v.make} ${v.model}, I checked your factory records and all scheduled maintenance is currently up to date! We'll perform our multi-point inspection when you come in. See you soon!`;
+        wordTrackEl.innerHTML = `<p>“Hi${greetingName}, looking ahead to your visit for the ${v.model}: your factory maintenance is completely up to date. We will perform our full multi-point safety inspection to ensure everything remains in top shape.”</p>`;
+        smsEl.value = `Hi${greetingName}! Ahead of your upcoming service appointment for your ${v.year} ${v.make} ${v.model}, all factory scheduled maintenance is currently up to date! We'll perform our multi-point inspection when you arrive. See you soon!`;
         modal.style.display = "flex";
         return;
     }
 
-    // A. Spoken Word-Track
     let brandIntro = "";
     let brandClose = "";
 
@@ -455,7 +464,6 @@ function openStoryModal() {
         <p>${brandClose}</p>
     `;
 
-    // B. Customer SMS (Future-Appointment Focused)
     const smsItems = v.dueNow.map(i => {
         const priceStr = i.price ? ` - $${i.price}` : "";
         const customReason = narratives[i.id] || i.name;
@@ -483,8 +491,8 @@ document.getElementById("copyWordTrackBtn").addEventListener("click", () => {
     const text = document.getElementById("wordTrackText").innerText;
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById("copyWordTrackBtn");
-        btn.textContent = "✅ Copied!";
-        setTimeout(() => { btn.textContent = "📋 Copy Script"; }, 2000);
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = "Copy Script"; }, 2000);
     });
 });
 
@@ -492,8 +500,8 @@ document.getElementById("copySmsBtn").addEventListener("click", () => {
     const text = document.getElementById("smsText").value;
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById("copySmsBtn");
-        btn.textContent = "✅ Copied!";
-        setTimeout(() => { btn.textContent = "📋 Copy SMS"; }, 2000);
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = "Copy SMS"; }, 2000);
     });
 });
 
@@ -501,9 +509,12 @@ document.getElementById("copySmsBtn").addEventListener("click", () => {
 document.getElementById("decodeButton").addEventListener("click", decodeVehicle);
 
 ["vin", "mileage", "inServiceDate", "customerName"].forEach(id => {
-    document.getElementById(id).addEventListener("keypress", (e) => {
-        if (e.key === "Enter") decodeVehicle();
-    });
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") decodeVehicle();
+        });
+    }
 });
 
 document.getElementById("clearButton").addEventListener("click", () => {
@@ -515,68 +526,129 @@ document.getElementById("clearButton").addEventListener("click", () => {
     lastDecodedVehicle = null;
     document.getElementById("vin").focus();
 });
+
+
 // ==========================================
-// CAMERA VIN OCR SCANNER
+// LIVE CAMERA SCANNER & AUTO-CAPTURE ENGINE
 // ==========================================
 const cameraBtn = document.getElementById("cameraBtn");
-const vinCameraInput = document.getElementById("vinCameraInput");
-const vinInput = document.getElementById("vin");
-const resultContainer = document.getElementById("result");
+const scannerModal = document.getElementById("scannerModal");
+const closeScannerBtn = document.getElementById("closeScannerBtn");
+const scannerVideo = document.getElementById("scannerVideo");
+const scannerCanvas = document.getElementById("scannerCanvas");
+const scannerStatus = document.getElementById("scannerStatus");
+const scannerReticle = document.getElementById("scannerReticle");
+const vinInputField = document.getElementById("vin");
 
-cameraBtn.addEventListener("click", () => {
-    vinCameraInput.click();
-});
+let videoStream = null;
+let scanTimer = null;
+let isProcessingFrame = false;
+let ocrWorker = null;
 
-vinCameraInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+async function initOCRWorker() {
+    if (!ocrWorker) {
+        ocrWorker = await Tesseract.createWorker('eng');
+    }
+}
 
-    // Reset input so you can snap another if needed
-    e.target.value = "";
+async function startLiveScanner() {
+    try {
+        scannerModal.style.display = "flex";
+        scannerStatus.textContent = "Starting camera...";
+        scannerReticle.classList.remove("locked");
 
-    resultContainer.innerHTML = `
-        <div class="service-entry" style="border-left-color: var(--primary); background: #eff6ff;">
-            <p><strong>📷 Scanning image for VIN...</strong></p>
-            <p>Analyzing text from dashboard/screen. Please hold on a few seconds.</p>
-        </div>
-    `;
+        videoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        });
+
+        scannerVideo.srcObject = videoStream;
+        await scannerVideo.play();
+
+        await initOCRWorker();
+
+        scannerStatus.textContent = "Aim VIN inside the box...";
+        isProcessingFrame = false;
+
+        scanTimer = setInterval(captureAndAnalyzeFrame, 400);
+
+    } catch (err) {
+        console.error("Camera access error:", err);
+        alert("Camera permission denied or camera not found.");
+        stopLiveScanner();
+    }
+}
+
+function stopLiveScanner() {
+    if (scanTimer) {
+        clearInterval(scanTimer);
+        scanTimer = null;
+    }
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    if (scannerVideo) scannerVideo.srcObject = null;
+    if (scannerModal) scannerModal.style.display = "none";
+}
+
+async function captureAndAnalyzeFrame() {
+    if (isProcessingFrame || !ocrWorker || scannerVideo.readyState !== 4) return;
+    isProcessingFrame = true;
 
     try {
-        // Run on-device OCR using Tesseract
-        const { data: { text } } = await Tesseract.recognize(file, 'eng');
-        
-        // Clean text: strip special chars and spaces
-        const rawUpper = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const vw = scannerVideo.videoWidth;
+        const vh = scannerVideo.videoHeight;
 
-        // Search for any 17-character sequence
-        const matches = rawUpper.match(/[A-Z0-9]{17}/g);
+        const cropW = Math.floor(vw * 0.85);
+        const cropH = Math.floor(vh * 0.28);
+        const cropX = Math.floor((vw - cropW) / 2);
+        const cropY = Math.floor((vh - cropH) / 2);
+
+        scannerCanvas.width = cropW;
+        scannerCanvas.height = cropH;
+        const ctx = scannerCanvas.getContext("2d");
+
+        ctx.drawImage(scannerVideo, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+        const { data: { text } } = await ocrWorker.recognize(scannerCanvas);
+        let raw = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const matches = raw.match(/[A-Z0-9]{17}/g);
 
         if (matches && matches.length > 0) {
-            let candidateVin = matches[0];
+            for (let candidate of matches) {
+                candidate = candidate
+                    .replace(/I/g, '1')
+                    .replace(/O/g, '0')
+                    .replace(/Q/g, '0');
 
-            // VIN standardization: Factory VINs never use I, O, or Q (to prevent mixup with 1 & 0)
-            candidateVin = candidateVin
-                .replace(/I/g, '1')
-                .replace(/O/g, '0')
-                .replace(/Q/g, '0');
+                const check = validateVIN(candidate);
 
-            vinInput.value = candidateVin;
+                if (check.valid) {
+                    scannerReticle.classList.add("locked");
+                    scannerStatus.textContent = `✅ VIN Detected: ${candidate}`;
 
-            resultContainer.innerHTML = `
-                <div class="service-entry" style="border-left-color: var(--success-green); background: var(--success-soft);">
-                    <p><strong>✅ VIN Captured: ${candidateVin}</strong></p>
-                    <p>Enter mileage and date, then tap <strong>Decode</strong>.</p>
-                </div>
-            `;
-        } else {
-            resultContainer.innerHTML = `
-                <p style="color:var(--danger-red);"><strong>⚠️ Could not clearly isolate a 17-character VIN.</strong></p>
-                <p style="font-size:13px; color:var(--slate-muted);">Text detected: "${text.trim().substring(0, 50)}..."</p>
-                <p>Please ensure the photo is in focus, well-lit, and holds the VIN straight.</p>
-            `;
+                    if (navigator.vibrate) navigator.vibrate(200);
+
+                    vinInputField.value = candidate;
+
+                    setTimeout(() => {
+                        stopLiveScanner();
+                    }, 500);
+
+                    return;
+                }
+            }
         }
     } catch (err) {
-        console.error("OCR Scan Error:", err);
-        resultContainer.innerHTML = `<p style="color:var(--danger-red);"><strong>Error scanning image. Please type VIN manually.</strong></p>`;
+        console.error("Frame scan error:", err);
+    } finally {
+        isProcessingFrame = false;
     }
-});
+}
+
+if (cameraBtn) cameraBtn.addEventListener("click", startLiveScanner);
+if (closeScannerBtn) closeScannerBtn.addEventListener("click", stopLiveScanner);
