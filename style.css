@@ -489,3 +489,41 @@ hr {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
+/* Mobile Optimization for iPhone */
+@media (max-width: 600px) {
+    body {
+        padding: 16px;
+    }
+
+    .input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    input {
+        width: 100% !important;
+        font-size: 16px !important; /* Prevents iPhone from auto-zooming in when typing */
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .btn-story-action {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .service-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .service-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
