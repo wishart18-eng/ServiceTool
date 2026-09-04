@@ -1,5 +1,5 @@
 /* ==========================================
-   SERVICETOOL - OFFICIAL WORKSHEET STYLES
+   SERVICETOOL - FULL COORDINATED STYLES
    ========================================== */
 
 :root {
@@ -61,42 +61,44 @@ h1 {
     border: 1px solid var(--slate-border);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-/* VIN Input with Camera Button */
+
+/* VIN Box Wrapper & Camera Button */
 .vin-input-wrapper {
     position: relative;
     display: inline-flex;
     align-items: center;
-    width: 240px;
+    width: 250px;
 }
 
 .vin-input-wrapper input {
     width: 100% !important;
-    padding-right: 42px !important; /* Space so text doesn't overlap the camera icon */
+    padding-right: 44px !important; /* Leaves room for camera icon */
 }
 
 .btn-cam {
-    position: absolute;
-    right: 4px;
+    position: absolute !important;
+    right: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    margin: 0 !important;
     background: transparent !important;
     border: none !important;
-    font-size: 18px;
-    padding: 6px 8px !important;
-    cursor: pointer;
+    font-size: 18px !important;
+    cursor: pointer !important;
+    z-index: 10 !important; /* Guarantees clickable on top */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     box-shadow: none !important;
-    color: var(--slate-heading);
 }
 
 .btn-cam:hover {
-    transform: scale(1.15);
-    background: transparent !important;
+    transform: translateY(-50%) scale(1.15) !important;
 }
 
-/* Mobile full-width adjustment */
-@media (max-width: 600px) {
-    .vin-input-wrapper {
-        width: 100% !important;
-    }
-}
 input {
     font-family: inherit;
     padding: 10px 14px;
@@ -119,7 +121,7 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-/* Buttons */
+/* Standard Buttons */
 button {
     font-family: inherit;
     padding: 10px 18px;
@@ -228,7 +230,6 @@ hr {
     margin: 24px 0;
 }
 
-/* Section Subheadings */
 #result h3 {
     font-size: 16px;
     font-weight: 700;
@@ -237,7 +238,7 @@ hr {
 }
 
 /* ==========================================
-   OFFICIAL ALTERNATING RECOMMENDED TABLE
+   OFFICIAL ALTERNATING TABLE
    ========================================== */
 
 .worksheet-table {
@@ -260,7 +261,6 @@ hr {
     border-bottom: 1px solid var(--slate-border);
 }
 
-/* Zebra Striping (Back-and-Forth Colors) */
 .service-row {
     display: flex;
     justify-content: space-between;
@@ -275,17 +275,14 @@ hr {
     border-bottom: none;
 }
 
-/* Odd rows: Crisp White */
 .service-row:nth-child(odd) {
     background-color: #ffffff;
 }
 
-/* Even rows: Clean Soft Tint */
 .service-row:nth-child(even) {
     background-color: #f8fafc;
 }
 
-/* Row Hover State */
 .service-row:hover {
     background-color: #f0f7ff;
 }
@@ -333,7 +330,6 @@ hr {
     font-style: italic;
 }
 
-/* Right-aligned Meta (Price & Badge) */
 .service-right {
     display: flex;
     align-items: center;
@@ -363,7 +359,6 @@ hr {
     border: 1px solid #a7f3d0;
 }
 
-/* Worksheet Footer Total Bar */
 .worksheet-footer {
     display: flex;
     justify-content: flex-end;
@@ -388,7 +383,6 @@ hr {
     color: var(--success-green);
 }
 
-/* Upcoming Items List */
 .upcoming-row {
     padding: 10px 14px;
     border-left: 4px solid var(--warning-amber);
@@ -403,24 +397,120 @@ hr {
 }
 
 /* ==========================================
-   MODAL POPUP STYLES
+   MODAL & SCANNER BACKDROPS (FIXED DEFAULTS)
    ========================================== */
 
-.modal-backdrop {
+/* Must be display: none by default so they never block clicks */
+.modal-backdrop,
+.scanner-backdrop {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.modal-backdrop {
     background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(4px);
+}
+
+.scanner-backdrop {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+/* Scanner Viewfinder */
+.scanner-container {
+    width: 100%;
+    max-width: 500px;
+    background: #0f172a;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid #334155;
+}
+
+.scanner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.btn-scanner-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: #000000;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
-    padding: 20px;
+    overflow: hidden;
 }
 
+#scannerVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-reticle {
+    position: absolute;
+    width: 85%;
+    height: 65px;
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s ease;
+}
+
+.scanner-reticle.locked {
+    border: 3px solid #22c55e !important;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 0 9999px rgba(0, 0, 0, 0.45) !important;
+}
+
+.reticle-laser {
+    width: 100%;
+    height: 2px;
+    background: rgba(59, 130, 246, 0.8);
+    box-shadow: 0 0 8px #3b82f6;
+    animation: laserScan 1.6s infinite alternate ease-in-out;
+}
+
+@keyframes laserScan {
+    0% { transform: translateY(-24px); }
+    100% { transform: translateY(24px); }
+}
+
+.scanner-footer {
+    padding: 12px 16px;
+    background: #1e293b;
+    text-align: center;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+/* Modal Card */
 .modal-card {
     background: #ffffff;
     width: 100%;
@@ -524,149 +614,31 @@ hr {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
-/* Mobile Optimization for iPhone */
+
+/* Mobile full-width */
 @media (max-width: 600px) {
     body {
         padding: 16px;
     }
-
     .input-row {
         flex-direction: column;
         align-items: stretch;
     }
-
-    input {
+    .vin-input-wrapper, input {
         width: 100% !important;
-        font-size: 16px !important; /* Prevents iPhone from auto-zooming in when typing */
+        font-size: 16px !important;
     }
-
     button {
         width: 100%;
         padding: 12px;
     }
-
-    .btn-story-action {
-        margin-left: 0;
-        margin-top: 10px;
-        width: 100%;
-    }
-
     .service-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-
     .service-right {
         width: 100%;
         justify-content: space-between;
     }
-}
-/* ==========================================
-   LIVE CAMERA SCANNER VIEWFINDER
-   ========================================== */
-
-.scanner-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 10000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-}
-
-.scanner-container {
-    width: 100%;
-    max-width: 500px;
-    background: #0f172a;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: 1px solid #334155;
-}
-
-.scanner-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: #1e293b;
-    color: #f8fafc;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.btn-scanner-close {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-size: 24px;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.btn-scanner-close:hover {
-    color: #ffffff;
-}
-
-.video-wrapper {
-    position: relative;
-    width: 100%;
-    height: 320px;
-    background: #000000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-}
-
-#scannerVideo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* The Target Aiming Box */
-.scanner-reticle {
-    position: absolute;
-    width: 85%;
-    height: 70px;
-    border: 2px dashed rgba(255, 255, 255, 0.6);
-    border-radius: 8px;
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-    display: flex;
-    align-items: center;
-    transition: border-color 0.2s ease;
-}
-
-/* Green Lock State when VIN is Found */
-.scanner-reticle.locked {
-    border: 3px solid #22c55e !important;
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 0 9999px rgba(0, 0, 0, 0.45) !important;
-}
-
-.reticle-laser {
-    width: 100%;
-    height: 2px;
-    background: rgba(59, 130, 246, 0.8);
-    box-shadow: 0 0 8px #3b82f6;
-    animation: laserScan 1.6s infinite alternate ease-in-out;
-}
-
-@keyframes laserScan {
-    0% { transform: translateY(-26px); }
-    100% { transform: translateY(26px); }
-}
-
-.scanner-footer {
-    padding: 12px 16px;
-    background: #1e293b;
-    text-align: center;
-    font-size: 13px;
-    color: #cbd5e1;
 }
