@@ -1,1 +1,182 @@
-
+{
+  "ALFA ROMEO": {
+    "GIULIA": {
+      "2.0": [
+        {
+          "id": "oil_service",
+          "name": "Engine Oil & Oil Filter",
+          "intervalMiles": 10000,
+          "intervalMonths": 12,
+          "mandatory": true,
+          "note": "Maximum factory interval: 10,000 miles or 1 year."
+        },
+        {
+          "id": "cabin_filter",
+          "name": "Cabin Air Filter",
+          "intervalMiles": 20000,
+          "intervalMonths": 24,
+          "mandatory": false,
+          "note": "Recommended every 20,000 miles / 2 years."
+        },
+        {
+          "id": "brake_fluid",
+          "name": "Brake Fluid Flush",
+          "intervalMiles": null,
+          "intervalMonths": 24,
+          "mandatory": true,
+          "note": "Replace every 2 years regardless of mileage."
+        },
+        {
+          "id": "engine_filter",
+          "name": "Engine Air Cleaner Filter",
+          "intervalMiles": 30000,
+          "intervalMonths": 36,
+          "mandatory": true,
+          "note": "Replace every 30,000 miles or 3 years."
+        },
+        {
+          "id": "spark_plugs",
+          "name": "Spark Plugs",
+          "intervalMiles": 60000,
+          "intervalMonths": null,
+          "mandatory": true,
+          "note": "NAFTA interval: Replace every 60,000 miles."
+        },
+        {
+          "id": "drive_belt",
+          "name": "Accessory Drive Belt",
+          "intervalMiles": 60000,
+          "intervalMonths": 72,
+          "mandatory": true,
+          "note": "Replace every 60,000 miles or 6 years."
+        },
+        {
+          "id": "sos_battery",
+          "name": "SOS Backup Battery",
+          "intervalMiles": null,
+          "intervalMonths": 60,
+          "mandatory": true,
+          "note": "Replace every 5 years regardless of mileage (if equipped)."
+        },
+        {
+          "id": "coolant",
+          "name": "Engine Coolant Flush",
+          "intervalMiles": 150000,
+          "intervalMonths": 120,
+          "mandatory": true,
+          "note": "Replace at 150,000 miles or 10 years."
+        }
+      ]
+    },
+    "STELVIO": {
+      "2.0": [
+        {
+          "id": "oil_service",
+          "name": "Engine Oil & Oil Filter",
+          "intervalMiles": 10000,
+          "intervalMonths": 12,
+          "mandatory": true,
+          "note": "Maximum factory interval: 10,000 miles or 1 year."
+        },
+        {
+          "id": "cabin_filter",
+          "name": "Cabin Air Filter",
+          "intervalMiles": 20000,
+          "intervalMonths": 24,
+          "mandatory": false,
+          "note": "Recommended every 20,000 miles / 2 years."
+        },
+        {
+          "id": "brake_fluid",
+          "name": "Brake Fluid Flush",
+          "intervalMiles": null,
+          "intervalMonths": 24,
+          "mandatory": true,
+          "note": "Replace every 2 years regardless of mileage."
+        },
+        {
+          "id": "engine_filter",
+          "name": "Engine Air Cleaner Filter",
+          "intervalMiles": 30000,
+          "intervalMonths": 36,
+          "mandatory": true,
+          "note": "Replace every 30,000 miles or 3 years."
+        },
+        {
+          "id": "spark_plugs",
+          "name": "Spark Plugs",
+          "intervalMiles": 60000,
+          "intervalMonths": null,
+          "mandatory": true,
+          "note": "NAFTA interval: Replace every 60,000 miles."
+        },
+        {
+          "id": "drive_belt",
+          "name": "Accessory Drive Belt",
+          "intervalMiles": 60000,
+          "intervalMonths": 72,
+          "mandatory": true,
+          "note": "Replace every 60,000 miles or 6 years."
+        },
+        {
+          "id": "transfer_case",
+          "name": "Transfer Case Oil (Q4 AWD)",
+          "intervalMiles": 80000,
+          "intervalMonths": null,
+          "mandatory": true,
+          "note": "AWD models: inspect / replace at 80,000 miles."
+        },
+        {
+          "id": "sos_battery",
+          "name": "SOS Backup Battery",
+          "intervalMiles": null,
+          "intervalMonths": 60,
+          "mandatory": true,
+          "note": "Replace every 5 years regardless of mileage."
+        },
+        {
+          "id": "coolant",
+          "name": "Engine Coolant Flush",
+          "intervalMiles": 150000,
+          "intervalMonths": 120,
+          "mandatory": true,
+          "note": "Replace at 150,000 miles or 10 years."
+        }
+      ]
+    }
+  },
+  "DEFAULT": [
+    {
+      "id": "oil_service",
+      "name": "Engine Oil & Filter Service",
+      "intervalMiles": 10000,
+      "intervalMonths": 12,
+      "mandatory": true,
+      "note": "Standard baseline: 10,000 miles or 1 year."
+    },
+    {
+      "id": "tire_rotation",
+      "name": "Tire Rotation & Brake Inspection",
+      "intervalMiles": 10000,
+      "intervalMonths": 12,
+      "mandatory": true,
+      "note": "Standard interval."
+    },
+    {
+      "id": "cabin_filter",
+      "name": "Cabin Air Filter",
+      "intervalMiles": 20000,
+      "intervalMonths": 24,
+      "mandatory": false,
+      "note": "Standard interval."
+    },
+    {
+      "id": "brake_fluid",
+      "name": "Brake Fluid Flush",
+      "intervalMiles": null,
+      "intervalMonths": 24,
+      "mandatory": true,
+      "note": "Replace every 2 years based on moisture absorption."
+    }
+  ]
+}
