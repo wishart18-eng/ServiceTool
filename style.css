@@ -1,201 +1,254 @@
 /* ==========================================
-   SERVICETOOL - FULL STYLESHEET
+   SERVICETOOL - ORIGINAL ARIAL LAYOUT
    ========================================== */
 
-:root {
-    --bg: #f4f6f9;
-    --card-bg: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --border: #e2e8f0;
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
-    --warning: #d97706;
-    --warning-bg: #fffbeb;
-    --info: #0284c7;
-    --info-bg: #f0f9ff;
-    --success: #16a34a;
-    --success-bg: #f0fdf4;
-    --story-purple: #4f46e5;
-    --story-purple-hover: #4338ca;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg);
-    color: var(--text-primary);
-    padding: 24px 16px;
-    display: flex;
-    justify-content: center;
+    font-family: Arial, sans-serif;
+    padding: 40px;
+    background-color: #ffffff;
+    color: #111111;
+    margin: 0;
 }
 
-.app-container {
-    width: 100%;
-    max-width: 900px;
-}
-
-.app-header {
+h1 {
+    font-size: 28px;
     margin-bottom: 20px;
 }
 
-.app-header h1 {
-    font-size: 24px;
-    font-weight: 800;
-}
-
-.app-header h1 span {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-left: 8px;
-}
-
-/* Base Card Style */
-.card {
-    background: var(--card-bg);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* 4-Column Form Grid */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr 1.2fr 1.2fr;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-@media (max-width: 820px) {
-    .form-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (max-width: 520px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.form-group label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 10px 12px;
-    font-size: 15px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    outline: none;
-    font-family: inherit;
-}
-
-.form-group input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.button-row {
+/* Inputs & Form Row */
+.input-row {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+input {
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    font-size: 14px;
+    width: 210px;
+    border: 1px solid #767676;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: 2px solid #005fb8;
 }
 
 /* Buttons */
-.btn {
+button {
+    font-family: Arial, sans-serif;
     padding: 10px 18px;
     font-size: 14px;
-    font-weight: 600;
-    border-radius: 6px;
-    border: none;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    background-color: #e9e9ed;
+    color: #000000;
+    border: 1px solid #8f8f9d;
+    border-radius: 2px;
 }
 
-.btn-primary {
-    background: var(--primary);
-    color: #fff;
-}
-.btn-primary:hover {
-    background: var(--primary-hover);
+button:hover {
+    background-color: #d0d0d7;
 }
 
-.btn-secondary {
-    background: #e2e8f0;
-    color: var(--text-primary);
-}
-.btn-secondary:hover {
-    background: #cbd5e1;
+#decodeButton {
+    background-color: #0066cc;
+    color: #ffffff;
+    border-color: #0052a3;
+    font-weight: bold;
 }
 
-.btn-copy {
-    background: #0f172a;
-    color: #fff;
-    margin-top: 14px;
+#decodeButton:hover {
+    background-color: #0052a3;
+}
+
+.btn-story-action {
+    background-color: #4b38b3;
+    color: #ffffff;
+    border-color: #3b2b91;
+    font-weight: bold;
+    margin-left: 15px;
+    padding: 8px 14px;
+}
+
+.btn-story-action:hover {
+    background-color: #3b2b91;
+}
+
+.btn-dms {
+    background-color: #222222;
+    color: #ffffff;
+    border-color: #000000;
+    font-weight: bold;
+    margin-top: 20px;
+    padding: 12px 20px;
+}
+
+.btn-dms:hover {
+    background-color: #444444;
+}
+
+/* Vehicle Result Section */
+#result {
+    margin-top: 25px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+#result h2 {
+    font-size: 24px;
+    margin-top: 15px;
+    margin-bottom: 12px;
+}
+
+#result h3 {
+    font-size: 18px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#result p {
+    margin: 6px 0;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #cccccc;
+    margin: 20px 0;
+}
+
+/* Maintenance List Items */
+.service-entry {
+    margin-bottom: 14px;
+}
+
+.service-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Price Tag */
+.service-price {
+    display: inline-block;
+    background-color: #d4edda;
+    color: #155724;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    border: 1px solid #c3e6cb;
+    border-radius: 3px;
+}
+
+.price-subtotal {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #155724;
+    display: inline-block;
+}
+
+/* ==========================================
+   MODAL POPUP (ARIAL THEME)
+   ========================================== */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-card {
+    background: #ffffff;
     width: 100%;
-    padding: 12px;
-}
-.btn-copy:hover {
-    background: #334155;
+    max-width: 650px;
+    border: 1px solid #333333;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    font-family: Arial, sans-serif;
 }
 
-/* Vehicle Banner */
-.vehicle-banner {
+.modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 14px;
-    margin-bottom: 14px;
-    gap: 12px;
-    flex-wrap: wrap;
+    padding: 14px 18px;
+    background: #f0f0f0;
+    border-bottom: 1px solid #cccccc;
 }
 
-.vehicle-banner h2 {
-    font-size: 22px;
-    color: var(--text-primary);
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
 }
 
-.banner-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-story {
-    background: var(--story-purple);
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 6px;
+.btn-close {
+    background: none;
     border: none;
+    font-size: 22px;
+    font-weight: bold;
     cursor: pointer;
-    transition: background 0.15s ease;
-    white-space: nowrap;
-}
-.btn-story:hover {
-    background: var(--story-purple-hover);
+    line-height: 1;
+    padding: 0 4px;
 }
 
-.vehicle-badge {
-    background: #e0f2fe;
-    color: #0369a1;
-    padding: 5px 12px;
-    border-radius:
+.modal-body {
+    padding: 20px;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+.story-section {
+    margin-bottom: 20px;
+}
+
+.story-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.story-label-row strong {
+    font-size: 14px;
+}
+
+.story-box {
+    width: 100%;
+    padding: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid #aaaaaa;
+    box-sizing: border-box;
+}
+
+.wordtrack-box {
+    background-color: #fcfcfc;
+    border-left: 4px solid #4b38b3;
+}
+
+.wordtrack-box p {
+    margin: 0 0 8px 0;
+}
+.wordtrack-box p:last-child {
+    margin-bottom: 0;
+}
+
+.sms-box {
+    background-color: #ffffff;
+    resize: vertical;
+}
