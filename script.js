@@ -337,6 +337,7 @@ async function decodeVehicle() {
 function renderOutput(data) {
     const resultContainer = document.getElementById("result");
     const pricedTotal = data.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
+    const carImageUrl = getVehicleImage(data.make, data.model);
 
     let html = `
         <div class="vehicle-result">
@@ -345,20 +346,29 @@ function renderOutput(data) {
                 <button type="button" id="openStoryModalBtn" class="btn-story-action">💬 Advisor Pitch & SMS Story</button>
             </h2>
 
-            <p><strong>VIN:</strong> ${data.vin}</p>
-            ${data.customerName ? `<p><strong>Customer:</strong> ${data.customerName}</p>` : ""}
-            <p><strong>Engine:</strong> ${data.engineDisplacement}L (${data.cylinders}-cylinder)</p>
-            <p><strong>Fuel:</strong> ${data.fuel}</p>
-            <p><strong>Transmission:</strong> ${data.transmission}</p>
-            <p><strong>Drive:</strong> ${data.driveType}</p>
-            <p><strong>Current Mileage:</strong> ${data.mileage.toLocaleString()} miles</p>
-            <p><strong>In-Service:</strong> ${data.inServiceLabel}</p>
-            <p><strong>Vehicle Age:</strong> ${data.age.years} years, ${data.age.months} months</p>
+            <div class="vehicle-header-grid">
+                <div class="vehicle-info-col">
+                    <p><strong>VIN:</strong> ${data.vin}</p>
+                    ${data.customerName ? `<p><strong>Customer:</strong> ${data.customerName}</p>` : ""}
+                    <p><strong>Engine:</strong> ${data.engineDisplacement}L (${data.cylinders}-cylinder)</p>
+                    <p><strong>Fuel:</strong> ${data.fuel}</p>
+                    <p><strong>Transmission:</strong> ${data.transmission}</p>
+                    <p><strong>Drive:</strong> ${data.driveType}</p>
+                    <p><strong>Current Mileage:</strong> ${data.mileage.toLocaleString()} miles</p>
+                    <p><strong>In-Service:</strong> ${data.inServiceLabel}</p>
+                    <p><strong>Vehicle Age:</strong> ${data.age.years} years, ${data.age.months} months</p>
+                </div>
+                <div class="vehicle-img-col">
+                    <img src="${carImageUrl}" alt="${data.year} ${data.make} ${data.model}" class="vehicle-hero-img">
+                </div>
+            </div>
 
             <hr>
 
             <h2>Factory Maintenance Worksheet</h2>
     `;
+    
+    // ... (leave the rest of renderOutput exactly as it was)
 
     if (data.dueNow.length > 0) {
         html += `
