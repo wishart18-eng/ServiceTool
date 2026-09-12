@@ -10,7 +10,37 @@ const fallbackDB = {
     "QUATTROPORTE": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] }
   }
 };
+// High-Resolution Model Press Renders
+const vehicleImages = {
+  "ALFA ROMEO": {
+    "GIULIA": "https://images.dealer.com/ddc/vehicles/2023/Alfa%20Romeo/Giulia/Sedan/trim_Ti_d61a9c/color/Alfa%20Rosso-414-222%2C18%2C36-640-en_US.jpg",
+    "STELVIO": "https://images.dealer.com/ddc/vehicles/2023/Alfa%20Romeo/Stelvio/SUV/trim_Ti_09101a/color/Alfa%20Rosso-414-222%2C18%2C36-640-en_US.jpg",
+    "TONALE": "https://images.dealer.com/ddc/vehicles/2024/Alfa%20Romeo/Tonale/SUV/trim_Ti_e847c2/color/Alfa%20Rosso-414-206%2C20%2C38-640-en_US.jpg"
+  },
+  "MASERATI": {
+    "GHIBLI": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Ghibli/Sedan/trim_Modena_Q4_e7e48b/color/Blu%20Emozione%20Metallic-820-21%2C47%2C108-640-en_US.jpg",
+    "LEVANTE": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Levante/SUV/trim_Modena_9d09c6/color/Grigio%20Maratea%20Metallescente-672-76%2C76%2C80-640-en_US.jpg",
+    "GRECALE": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Grecale/SUV/trim_Modena_f4a56a/color/Bianco%20Astro%20Metallic-835-189%2C192%2C198-640-en_US.jpg",
+    "QUATTROPORTE": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Quattroporte/Sedan/trim_Modena_Q4_a9d35b/color/Nero%20Ribelle%20Metallic-817-27%2C27%2C29-640-en_US.jpg"
+  },
+  "FIAT": {
+    "500X": "https://images.dealer.com/ddc/vehicles/2023/FIAT/500X/SUV/trim_Pop_363294/color/Rosso%20Passione%20Red%20Hypnotique-PW3-191%2C26%2C44-640-en_US.jpg",
+    "500": "https://images.dealer.com/ddc/vehicles/2019/FIAT/500/Hatchback/trim_Pop_46e4ee/color/Perla%20White%20Tri-Coat-PWH-227%2C226%2C222-640-en_US.jpg",
+    "124 SPIDER": "https://images.dealer.com/ddc/vehicles/2020/FIAT/124%20Spider/Convertible/trim_Classica_6fc079/color/Rosso%20Red-736-193%2C27%2C23-640-en_US.jpg"
+  },
+  "DEFAULT": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/solid/car-side.svg"
+};
 
+function getVehicleImage(make, rawModel) {
+    if (!vehicleImages[make]) return vehicleImages["DEFAULT"];
+    const models = vehicleImages[make];
+    for (const key of Object.keys(models)) {
+        if (rawModel.includes(key) || key.includes(rawModel)) {
+            return models[key];
+        }
+    }
+    return vehicleImages["DEFAULT"];
+}
 let schedulesDB = fallbackDB;
 let lastDecodedVehicle = null;
 
