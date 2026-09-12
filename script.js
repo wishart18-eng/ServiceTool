@@ -3,44 +3,54 @@
 // ==========================================
 
 const fallbackDB = {
+  "ALFA ROMEO": {
+    "GIULIA": { "2.0": [{ "id": "oil_service", "name": "Engine Oil & Filter Service", "intervalMiles": 10000, "intervalMonths": 12, "price": 298, "mandatory": true, "note": "Max interval: 10,000 miles or 1 year." }] },
+    "STELVIO": { "2.0": [{ "id": "oil_service", "name": "Engine Oil & Filter Service", "intervalMiles": 10000, "intervalMonths": 12, "price": 298, "mandatory": true, "note": "10,000 miles or 1 year." }] }
+  },
   "MASERATI": {
     "GHIBLI": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] },
     "LEVANTE": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] },
     "GRECALE": { "2.0": [{ "id": "oil_service", "name": "Engine Oil & Filter Service (MHEV)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "10,000 miles or 1 year." }] },
     "QUATTROPORTE": { "3.0": [{ "id": "oil_service", "name": "Engine Oil & Filter (Maserati Spec)", "intervalMiles": 10000, "intervalMonths": 12, "price": 910, "mandatory": true, "note": "Annual service or 10,000 miles." }] }
-  }
-};
-// High-Resolution Model Press Renders
-const vehicleImages = {
-  "ALFA ROMEO": {
-    "GIULIA": "https://images.dealer.com/ddc/vehicles/2023/Alfa%20Romeo/Giulia/Sedan/trim_Ti_d61a9c/color/Alfa%20Rosso-414-222%2C18%2C36-640-en_US.jpg",
-    "STELVIO": "https://images.dealer.com/ddc/vehicles/2023/Alfa%20Romeo/Stelvio/SUV/trim_Ti_09101a/color/Alfa%20Rosso-414-222%2C18%2C36-640-en_US.jpg",
-    "TONALE": "https://images.dealer.com/ddc/vehicles/2024/Alfa%20Romeo/Tonale/SUV/trim_Ti_e847c2/color/Alfa%20Rosso-414-206%2C20%2C38-640-en_US.jpg"
-  },
-  "MASERATI": {
-    "GHIBLI": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Ghibli/Sedan/trim_Modena_Q4_e7e48b/color/Blu%20Emozione%20Metallic-820-21%2C47%2C108-640-en_US.jpg",
-    "LEVANTE": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Levante/SUV/trim_Modena_9d09c6/color/Grigio%20Maratea%20Metallescente-672-76%2C76%2C80-640-en_US.jpg",
-    "GRECALE": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Grecale/SUV/trim_Modena_f4a56a/color/Bianco%20Astro%20Metallic-835-189%2C192%2C198-640-en_US.jpg",
-    "QUATTROPORTE": "https://images.dealer.com/ddc/vehicles/2023/Maserati/Quattroporte/Sedan/trim_Modena_Q4_a9d35b/color/Nero%20Ribelle%20Metallic-817-27%2C27%2C29-640-en_US.jpg"
   },
   "FIAT": {
-    "500X": "https://images.dealer.com/ddc/vehicles/2023/FIAT/500X/SUV/trim_Pop_363294/color/Rosso%20Passione%20Red%20Hypnotique-PW3-191%2C26%2C44-640-en_US.jpg",
-    "500": "https://images.dealer.com/ddc/vehicles/2019/FIAT/500/Hatchback/trim_Pop_46e4ee/color/Perla%20White%20Tri-Coat-PWH-227%2C226%2C222-640-en_US.jpg",
-    "124 SPIDER": "https://images.dealer.com/ddc/vehicles/2020/FIAT/124%20Spider/Convertible/trim_Classica_6fc079/color/Rosso%20Red-736-193%2C27%2C23-640-en_US.jpg"
+    "500X": { "1.3": [{ "id": "oil_service", "name": "Engine Oil & Filter Service", "intervalMiles": 10000, "intervalMonths": 12, "price": 275, "mandatory": true, "note": "10,000 miles or 1 year." }] },
+    "500": { "1.4": [{ "id": "oil_service", "name": "Engine Oil & Filter (MultiAir Spec)", "intervalMiles": 8000, "intervalMonths": 12, "price": 275, "mandatory": true, "note": "MultiAir system requires strict oil maintenance." }] },
+    "124 SPIDER": { "1.4": [{ "id": "oil_service", "name": "Engine Oil & Filter (0W-40 / 5W-40)", "intervalMiles": 10000, "intervalMonths": 12, "price": 275, "mandatory": true, "note": "10,000 miles or 1 year." }] }
+  }
+};
+
+// Reliable Public Vehicle Renders
+const vehicleImages = {
+  "ALFA ROMEO": {
+    "GIULIA": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/2018_Alfa_Romeo_Giulia_Ti_Q4_2.0L_front_5.24.19.jpg/640px-2018_Alfa_Romeo_Giulia_Ti_Q4_2.0L_front_5.24.19.jpg",
+    "STELVIO": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/2018_Alfa_Romeo_Stelvio_Ti_AWD_2.0L%2C_front_8.21.19.jpg/640px-2018_Alfa_Romeo_Stelvio_Ti_AWD_2.0L%2C_front_8.21.19.jpg",
+    "TONALE": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Alfa_Romeo_Tonale_IAA_2023_1X7A0308.jpg/640px-Alfa_Romeo_Tonale_IAA_2023_1X7A0308.jpg"
   },
-  "DEFAULT": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/solid/car-side.svg"
+  "MASERATI": {
+    "GHIBLI": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Maserati_Ghibli_III_front-1.jpg/640px-Maserati_Ghibli_III_front-1.jpg",
+    "LEVANTE": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/2017_Maserati_Levante_V6_Automatic_3.0_Front.jpg/640px-2017_Maserati_Levante_V6_Automatic_3.0_Front.jpg",
+    "GRECALE": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Maserati_Grecale_GT_IMG_7034.jpg/640px-Maserati_Grecale_GT_IMG_7034.jpg",
+    "QUATTROPORTE": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Maserati_Quattroporte_VI_GTS_front_20130907.jpg/640px-Maserati_Quattroporte_VI_GTS_front_20130907.jpg"
+  },
+  "FIAT": {
+    "500X": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/2016_Fiat_500X_Pop_1.6_Front.jpg/640px-2016_Fiat_500X_Pop_1.6_Front.jpg",
+    "500": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Fiat_500_1.2_8V_Lounge_%28III%29_%E2%80%93_Frontansicht%2C_18._Mai_2013%2C_Ratingen.jpg/640px-Fiat_500_1.2_8V_Lounge_%28III%29_%E2%80%93_Frontansicht%2C_18._Mai_2013%2C_Ratingen.jpg",
+    "124 SPIDER": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Fiat_124_Spider_Lusso_%28MultiAir%29_%E2%80%93_Frontansicht%2C_28._August_2016%2C_D%C3%BCsseldorf.jpg/640px-Fiat_124_Spider_Lusso_%28MultiAir%29_%E2%80%93_Frontansicht%2C_28._August_2016%2C_D%C3%BCsseldorf.jpg"
+  }
 };
 
 function getVehicleImage(make, rawModel) {
-    if (!vehicleImages[make]) return vehicleImages["DEFAULT"];
+    if (!vehicleImages[make]) return "";
     const models = vehicleImages[make];
     for (const key of Object.keys(models)) {
         if (rawModel.includes(key) || key.includes(rawModel)) {
             return models[key];
         }
     }
-    return vehicleImages["DEFAULT"];
+    return "";
 }
+
 let schedulesDB = fallbackDB;
 let lastDecodedVehicle = null;
 
@@ -83,9 +93,6 @@ async function loadSchedules() {
 }
 loadSchedules();
 
-// ==========================================
-// OFFICIAL VIN VALIDATOR & CHECK-DIGIT
-// ==========================================
 function validateVIN(vin) {
     if (!vin || vin.length !== 17) return { valid: false };
     vin = vin.toUpperCase();
@@ -118,7 +125,6 @@ function validateVIN(vin) {
     };
 }
 
-// Fuzzy Date Parser
 function parseFuzzyDate(raw) {
     if (!raw) return null;
     const clean = raw.trim().toLowerCase();
@@ -208,7 +214,6 @@ function findScheduleForVehicle(make, rawModel, engineDisplacement) {
     return schedulesDB["DEFAULT"] || [];
 }
 
-// Decode Function
 async function decodeVehicle() {
     const vinInput = document.getElementById("vin");
     const mileageInput = document.getElementById("mileage");
@@ -333,7 +338,7 @@ async function decodeVehicle() {
     }
 }
 
-// Render Table
+// Render Output with Photo Grid
 function renderOutput(data) {
     const resultContainer = document.getElementById("result");
     const pricedTotal = data.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
@@ -358,17 +363,16 @@ function renderOutput(data) {
                     <p><strong>In-Service:</strong> ${data.inServiceLabel}</p>
                     <p><strong>Vehicle Age:</strong> ${data.age.years} years, ${data.age.months} months</p>
                 </div>
+                ${carImageUrl ? `
                 <div class="vehicle-img-col">
                     <img src="${carImageUrl}" alt="${data.year} ${data.make} ${data.model}" class="vehicle-hero-img">
-                </div>
+                </div>` : ""}
             </div>
 
             <hr>
 
             <h2>Factory Maintenance Worksheet</h2>
     `;
-    
-    // ... (leave the rest of renderOutput exactly as it was)
 
     if (data.dueNow.length > 0) {
         html += `
@@ -567,9 +571,8 @@ document.getElementById("clearButton").addEventListener("click", () => {
     document.getElementById("vin").focus();
 });
 
-
 // ==========================================
-// HIGH-PRECISION BARCODE + TUNED VIN SCANNER
+// SCANNER CONTROLS
 // ==========================================
 const cameraBtn = document.getElementById("cameraBtn");
 const scannerModal = document.getElementById("scannerModal");
@@ -587,15 +590,10 @@ let isProcessingFrame = false;
 let ocrWorker = null;
 let barcodeReader = null;
 
-// 1. Initialize High-Precision Tesseract (Restricted strictly to VIN charset)
 async function initOCRWorker() {
     if (!ocrWorker) {
         scannerLiveRead.textContent = "Calibrating VIN scanner...";
         ocrWorker = await Tesseract.createWorker('eng');
-        
-        // CRITICAL TUNING FOR VIN PLATES:
-        // - Only valid VIN characters (No I, O, Q, no lowercase, no punctuation)
-        // - Single text line PSM (7) instead of multi-line book mode (3)
         await ocrWorker.setParameters({
             tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
             tessedit_pageseg_mode: '7'
@@ -606,7 +604,6 @@ async function initOCRWorker() {
     }
 }
 
-// 2. Launch Camera
 async function startLiveScanner() {
     try {
         scannerModal.style.display = "flex";
@@ -616,20 +613,18 @@ async function startLiveScanner() {
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "environment",
-                width: { ideal: 1920 }, // Request high-definition for small VIN characters
+                width: { ideal: 1920 },
                 height: { ideal: 1080 }
             }
         });
 
         scannerVideo.srcObject = videoStream;
         await scannerVideo.play();
-
         await initOCRWorker();
 
         scannerLiveRead.textContent = "Aim at door barcode or dash VIN...";
         isProcessingFrame = false;
 
-        // Loop every 450ms
         scanTimer = setInterval(analyzeFrame, 450);
 
     } catch (err) {
@@ -652,19 +647,14 @@ function stopLiveScanner() {
     if (scannerModal) scannerModal.style.display = "none";
 }
 
-// 3. Contrast & Binarization Enhancer for Stamped Metal and Backlit Screens
 function enhanceContrast(ctx, width, height) {
     const imgData = ctx.getImageData(0, 0, width, height);
     const d = imgData.data;
 
     for (let i = 0; i < d.length; i += 4) {
-        // Luminance
         let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        
-        // Contrast expansion curve (makes faint etched characters bold)
         gray = ((gray - 128) * 2.2) + 128;
         gray = Math.max(0, Math.min(255, gray));
-
         d[i] = gray;
         d[i + 1] = gray;
         d[i + 2] = gray;
@@ -673,7 +663,6 @@ function enhanceContrast(ctx, width, height) {
     ctx.putImageData(imgData, 0, 0);
 }
 
-// 4. Main Frame Analysis (Barcode Check -> OCR Fallback)
 async function analyzeFrame() {
     if (isProcessingFrame || !ocrWorker || scannerVideo.readyState !== 4) return;
     isProcessingFrame = true;
@@ -682,28 +671,24 @@ async function analyzeFrame() {
         const vw = scannerVideo.videoWidth;
         const vh = scannerVideo.videoHeight;
 
-        // Tightly crop the reticle box where the user aims
         const cropW = Math.floor(vw * 0.85);
         const cropH = Math.floor(vh * 0.22);
         const cropX = Math.floor((vw - cropW) / 2);
         const cropY = Math.floor((vh - cropH) / 2);
 
-        // Scale canvas up 2x so small stamped VIN characters are tall enough for OCR
         scannerCanvas.width = cropW * 2;
         scannerCanvas.height = cropH * 2;
         const ctx = scannerCanvas.getContext("2d");
         ctx.imageSmoothingEnabled = true;
 
-        // Draw zoomed crop
         ctx.drawImage(scannerVideo, cropX, cropY, cropW, cropH, 0, 0, scannerCanvas.width, scannerCanvas.height);
 
-        // A. Check for Barcodes First (Code 39 / DataMatrix automotive standard)
+        // Barcode check
         if (barcodeReader) {
             try {
                 const barcodeResult = barcodeReader.decode(scannerCanvas);
                 if (barcodeResult && barcodeResult.text) {
                     let bcText = barcodeResult.text.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                    // Some imported barcodes prepend 'I' or '1'
                     if (bcText.length === 18 && (bcText.startsWith('I') || bcText.startsWith('1'))) {
                         bcText = bcText.substring(1);
                     }
@@ -712,15 +697,11 @@ async function analyzeFrame() {
                         return;
                     }
                 }
-            } catch (barcodeErr) {
-                // No barcode in this frame; proceed to OCR
-            }
+            } catch (barcodeErr) {}
         }
 
-        // B. Apply Contrast Enhancer for Plain Text / Stamped Plates
+        // OCR check
         enhanceContrast(ctx, scannerCanvas.width, scannerCanvas.height);
-
-        // C. Run Tuned OCR
         const { data: { text } } = await ocrWorker.recognize(scannerCanvas);
         let raw = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
@@ -728,11 +709,9 @@ async function analyzeFrame() {
             scannerLiveRead.textContent = `Reading: ${raw.slice(0, 17)} (${raw.length}/17)`;
         }
 
-        // Search for 17-character sequence
         const matches = raw.match(/[A-Z0-9]{17}/g);
         if (matches && matches.length > 0) {
             for (let candidate of matches) {
-                // Auto-correct common OCR mix-ups (I -> 1, O -> 0, Q -> 0)
                 candidate = candidate
                     .replace(/I/g, '1')
                     .replace(/O/g, '0')
@@ -753,7 +732,6 @@ async function analyzeFrame() {
     }
 }
 
-// Trigger capture lock
 function lockAndCapture(vin, source) {
     scannerReticle.classList.add("locked");
     scannerLiveRead.textContent = `✅ ${source} Locked: ${vin}`;
