@@ -452,4 +452,262 @@ function renderOutput(data) {
         }).join("\n");
 
         const totalStr = pricedTotal > 0 ? `\nESTIMATED TOTAL: $${pricedTotal.toLocaleString()}` : "";
-        const clientStr = data.customerName ? `CUSTOMER: ${data.customerName}\n`
+        const clientStr = data.customerName ? `CUSTOMER: ${data.customerName}\n` : "";
+        const textToCopy = `${clientStr}VEHICLE: ${data.year} ${data.make} ${data.model} (VIN: ${data.vin})\nMILEAGE: ${data.mileage.toLocaleString()} mi | IN-SERVICE: ${data.inServiceLabel}\n\nRECOMMENDED FACTORY MAINTENANCE:\n${dueList || "- None currently due"}${totalStr}`;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const btn = document.getElementById("copyNotesBtn");
+            const originalText = btn.innerText;
+            btn.innerText = "✅ Copied to Clipboard!";
+            setTimeout(() => { btn.innerText = originalText; }, 2000);
+        }).catch(err => {
+            console.error("Failed to copy notes:", err);
+        });
+    });
+}
+
+function openStoryModal() {
+    if (!lastDecodedVehicle) return;
+
+    const v = lastDecodedVehicle;
+    const modalTitle = document.getElementById("modalVehicleTitle");
+    const wordTrackEl = document.getElementById("wordTrackText");
+    const smsEl = document.getElementById("smsText");
+    const modal = document.getElementById("storyModal");
+
+    modalTitle.innerText = `${v.year} ${v.make} ${v.model} Service Pitch`;
+
+    const makeKey = (v.make || "").toUpperCase();
+    const brandNarratives = itemNarratives[makeKey] || itemNarratives["ALFA ROMEO"] || {};
+
+    let wordTrackHtml = `<p><em>"Good morning/afternoon ${v.customerName ? v.customerName : 'there'}, this is your service advisor calling regarding your ${v.year} ${v.make} ${v.model}.</em></p>`;
+    wordTrackHtml += `<p><em>We completed our factory check based on your current mileage of ${v.mileage.toLocaleString()} miles. `;
+
+    if (v.dueNow.length > 0) {
+        wordTrackHtml += `According to OEM guidelines, there are ${v.dueNow.length} critical service items due on your vehicle today:</em></p>`;
+        v.dueNow.forEach(item => {
+            const narrative = brandNarratives[item.id] || brandNarratives["default"] || item.reason;
+            const priceStr = item.price ? ` ($${item.price.toLocaleString()})` : "";
+            wordTrackHtml += `<p><strong>• ${item.name}${priceStr}:</strong> ${narrative}</p>`;
+        });
+        const total = v.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
+        if (total > 0) {
+            wordTrackHtml += `<p><em>The total estimate for these items comes to $${total.toLocaleString()}. Would you like us to proceed with these factory items while we have your vehicle on the lift today?"</em></p>`;
+        } else {
+            wordTrackHtml += `<p><em>Would you like us to proceed with these factory recommendations while your vehicle is in the shop today?"</em></p>`;
+        }
+    } else {
+        wordTrackHtml += `Your vehicle is currently in great shape with no overdue factory intervals. We'll complete your inspection and have it ready shortly!"</em></p>`;
+    }
+
+    wordTrackEl.innerHTML = wordTrackHtml;
+
+    const greeting = v.customerName ? `Hi ${v.customerName}, ` : "Hi, ";
+    let sms = `${greeting}this is service regarding your ${v.year} ${v.make} ${v.model}. At ${v.mileage.toLocaleString()} miles, factory recommendations for this visit include:\n`;
+    if (v.dueNow.length > 0) {
+        v.dueNow.forEach(item => {
+            const priceStr = item.price ? ` ($${item.price})` : "";
+            sms += `• ${item.name}${priceStr}\n`;
+        });
+        const total = v.dueNow.reduce((sum, item) => sum + (item.price || 0), 0);
+        if (total > 0) {
+            sms += `Est. Total: $${total.toLocaleString()}\n`;
+        }
+    } else {
+        sms += `• Regular inspection & check (no overdue items)\n`;
+    }
+    sms += `Please reply YES to approve or call us with any questions!`;
+
+    smsEl.value = sms;
+    modal.style.display = "flex";
+}
+
+const closeModalBtn = document.getElementById("closeModalBtn");
+const storyModal = document.getElementById("storyModal");
+if (closeModalBtn && storyModal) {
+    closeModalBtn.addEventListener("click", () => {
+        storyModal.style.display = "none";
+    });
+    storyModal.addEventListener("click", (e) => {
+        if (e.target === storyModal) storyModal.style.display = "none";
+    });
+}
+
+const copyWordTrackBtn = document.getElementById("copyWordTrackBtn");
+if (copyWordTrackBtn) {
+    copyWordTrackBtn.addEventListener("click", () => {
+        const text = document.getElementById("wordTrackText").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const prev = copyWordTrackBtn.innerText;
+            copyWordTrackBtn.innerText = "✅ Copied!";
+            setTimeout(() => { copyWordTrackBtn.innerText = prev; }, 2000);
+        });
+    });
+}
+
+const copySmsBtn = document.getElementById("copySmsBtn");
+if (copySmsBtn) {
+    copySmsBtn.addEventListener("click", () => {
+        const text = document.getElementById("smsText").value;
+        navigator.clipboard.writeText(text).then(() => {
+            const prev = copySmsBtn.innerText;
+            copySmsBtn.innerText = "✅ Copied!";
+            setTimeout(() => { copySmsBtn.innerText = prev; }, 2000);
+        });
+    });
+}
+
+document.getElementById("decodeButton").addEventListener("click", decodeVehicle);
+
+document.getElementById("clearButton").addEventListener("click", () => {
+    document.getElementById("vin").value = "";
+    document.getElementById("mileage").value = "";
+    document.getElementById("inServiceDate").value = "";
+    document.getElementById("customerName").value = "";
+    document.getElementById("result").innerHTML = "";
+    lastDecodedVehicle = null;
+    document.getElementById("vin").focus();
+});
+
+["vin", "mileage", "inServiceDate", "customerName"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                decodeVehicle();
+            }
+        });
+    }
+});
+
+let zxingReader = null;
+let activeMediaStream = null;
+const scannerModal = document.getElementById("scannerModal");
+const cameraBtn = document.getElementById("cameraBtn");
+const closeScannerBtn = document.getElementById("closeScannerBtn");
+const forceSnapBtn = document.getElementById("forceSnapBtn");
+const scannerVideo = document.getElementById("scannerVideo");
+const scannerCanvas = document.getElementById("scannerCanvas");
+const scannerReticle = document.getElementById("scannerReticle");
+const scannerLiveRead = document.getElementById("scannerLiveRead");
+const vinInput = document.getElementById("vin");
+
+function stopScanner() {
+    if (zxingReader) {
+        try { zxingReader.reset(); } catch (e) {}
+        zxingReader = null;
+    }
+    if (activeMediaStream) {
+        activeMediaStream.getTracks().forEach(track => track.stop());
+        activeMediaStream = null;
+    }
+    if (scannerVideo) {
+        scannerVideo.srcObject = null;
+    }
+    if (scannerReticle) {
+        scannerReticle.classList.remove("locked");
+    }
+    if (scannerModal) {
+        scannerModal.style.display = "none";
+    }
+}
+
+function handleSuccessfulVinScan(detectedVin) {
+    const clean = detectedVin.trim().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, "");
+    if (clean.length === 17) {
+        if (scannerReticle) scannerReticle.classList.add("locked");
+        if (scannerLiveRead) scannerLiveRead.innerText = `VIN Detected: ${clean}`;
+        vinInput.value = clean;
+        setTimeout(() => {
+            stopScanner();
+            const mileageInput = document.getElementById("mileage");
+            if (mileageInput && !mileageInput.value) {
+                mileageInput.focus();
+            } else {
+                decodeVehicle();
+            }
+        }, 600);
+    }
+}
+
+async function startScanner() {
+    if (!scannerModal) return;
+    scannerModal.style.display = "flex";
+    if (scannerLiveRead) scannerLiveRead.innerText = "Position VIN barcode or text in frame...";
+    if (scannerReticle) scannerReticle.classList.remove("locked");
+
+    try {
+        if (typeof ZXing !== "undefined" && ZXing.BrowserMultiFormatReader) {
+            zxingReader = new ZXing.BrowserMultiFormatReader();
+            const videoInputDevices = await zxingReader.listVideoInputDevices();
+            const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[videoInputDevices.length - 1].deviceId : undefined;
+
+            await zxingReader.decodeFromVideoDevice(selectedDeviceId, "scannerVideo", (result, err) => {
+                if (result) {
+                    const text = result.getText();
+                    if (scannerLiveRead) scannerLiveRead.innerText = `Reading: ${text}`;
+                    const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i);
+                    if (vinMatch) {
+                        handleSuccessfulVinScan(vinMatch[0]);
+                    }
+                }
+            });
+        } else {
+            activeMediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" } }
+            });
+            scannerVideo.srcObject = activeMediaStream;
+            scannerVideo.play();
+        }
+    } catch (err) {
+        console.error("Camera access error:", err);
+        if (scannerLiveRead) scannerLiveRead.innerText = "Camera access denied or unavailable.";
+    }
+}
+
+if (cameraBtn) {
+    cameraBtn.addEventListener("click", startScanner);
+}
+
+if (closeScannerBtn) {
+    closeScannerBtn.addEventListener("click", stopScanner);
+}
+
+if (scannerModal) {
+    scannerModal.addEventListener("click", (e) => {
+        if (e.target === scannerModal) stopScanner();
+    });
+}
+
+if (forceSnapBtn) {
+    forceSnapBtn.addEventListener("click", async () => {
+        if (!scannerVideo || !scannerCanvas) return;
+        if (scannerLiveRead) scannerLiveRead.innerText = "Analyzing frame with OCR...";
+
+        const width = scannerVideo.videoWidth || 640;
+        const height = scannerVideo.videoHeight || 480;
+        scannerCanvas.width = width;
+        scannerCanvas.height = height;
+        const ctx = scannerCanvas.getContext("2d");
+        ctx.drawImage(scannerVideo, 0, 0, width, height);
+
+        if (typeof Tesseract !== "undefined") {
+            try {
+                const res = await Tesseract.recognize(scannerCanvas, 'eng');
+                const rawText = res.data.text || "";
+                const cleanText = rawText.toUpperCase().replace(/\s+/g, "");
+                const vinMatch = cleanText.match(/[A-HJ-NPR-Z0-9]{17}/);
+                if (vinMatch) {
+                    handleSuccessfulVinScan(vinMatch[0]);
+                    return;
+                }
+                if (scannerLiveRead) scannerLiveRead.innerText = "No 17-character VIN found. Try again.";
+            } catch (ocrErr) {
+                console.error("OCR error:", ocrErr);
+                if (scannerLiveRead) scannerLiveRead.innerText = "OCR processing failed. Position closer.";
+            }
+        } else {
+            if (scannerLiveRead) scannerLiveRead.innerText = "OCR library unavailable.";
+        }
+    });
+}

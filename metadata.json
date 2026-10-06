@@ -1,0 +1,8 @@
+{
+  "name": "ServiceTool VIN Decoder",
+  "description": "VIN decoder and vehicle service pitch generator with barcode and OCR scanning.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
