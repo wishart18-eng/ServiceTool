@@ -1,5 +1,5 @@
 {
-  "name": "ServiceTool VIN Decoder",
+  "name": "ServiceToolV1",
   "description": "VIN decoder and vehicle service pitch generator with barcode and OCR scanning.",
   "permissions": [],
   "capabilities": [
